@@ -262,7 +262,7 @@
   .next-box-later{ opacity: 0.72; padding: 9px 14px; }
   .next-box-later .next-th{ font-size: 13px; font-weight:500; }
   .next-box-empty{ border-style: dashed; background: transparent; }
-  .next-box-empty .next-th{ color: var(--muted); font-weight:500; }
+  .next-box-empty .next-th{ color: var(--muted); font-weight:600; font-size: 16px; }
   .next-box-empty svg{ opacity: 0.5; }
   .next-box svg{ width:22px; height:22px; flex-shrink:0; color: var(--muted); }
   .next-th{ font-size: 14px; font-weight:600; }
@@ -559,7 +559,8 @@ function renderCards(queueList, scheduleMap){
       : `<div class="next-box next-box-empty${i > 0 ? ' next-box-later' : ''}">
            ${calendarSvg()}
            <div>
-             <div class="next-th">ยังไม่มีคิวจอง - Available</div>
+             <div class="next-th">ยังไม่มีคิวจอง</div>
+             <div class="next-en">Open</div>
            </div>
          </div>`
     ).join('');
@@ -634,7 +635,6 @@ async function syncNow(){
 }
 
 /* ---------------- Clock ---------------- */
-const thMonths = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
 const enMonths = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 function tickClock(){
@@ -644,10 +644,9 @@ function tickClock(){
   document.getElementById('clockTime').textContent = `${hh}:${mm}`;
 
   const d = now.getDate();
-  const beYear = now.getFullYear() + 543;
   const ceYear = now.getFullYear();
-  document.getElementById('clockDate').innerHTML =
-    `${d} ${thMonths[now.getMonth()]} ${beYear}<br>${d} ${enMonths[now.getMonth()]} ${ceYear}`;
+  document.getElementById('clockDate').textContent =
+    `${d} ${enMonths[now.getMonth()]} ${ceYear}`;
 }
 
 /* ---------------- Init ---------------- */
