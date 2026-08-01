@@ -545,13 +545,14 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  SHEET_ID: "1PPRgJhXK2LJd5sEBH2J9n3tzh6OiwgBbwhI3_PeBczE",
+  SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // tab holding hourly booking schedule
   SETTINGS_TAB: "Settings",              // tab holding shop name / phone etc.
   REFRESH_MS: 15000,                     // how often to re-check the sheet (ms)
   OPEN_HOUR: 12,                          // operating hours: 12:00 - 23:00
-  CLOSE_HOUR: 23
+  CLOSE_HOUR: 23,
+  MIN_BOOKABLE_GAP_MIN: 60                // a free gap shorter than this won't be shown as "Available"
 };
 
 /* ---------------- Time helpers (minute precision) ---------------- */
@@ -630,7 +631,8 @@ async function fetchTab(tabName){
 
 // Strict "HH:MM" parser for the optional exact-time override columns
 function parseExactTime(str){
-  const m = /^(\d{1,2}):(\d{2})$/.exec((str || '').trim());
+  // Lenient: tolerates Google Sheets auto-formatting a typed time as "14:08:00", extra spaces, etc.
+  const m = /(\d{1,2}):(\d{2})/.exec((str || '').trim());
   if (!m) return null;
   const h = parseInt(m[1], 10), mm = parseInt(m[2], 10);
   if (h > 23 || mm > 59) return null;
@@ -677,12 +679,14 @@ function buildScheduleMap(scheduleRows){
     while (i < rows.length){
       if (!rows[i].busy){ i++; continue; }
 
-      // Extend the block while hours are contiguous and still marked busy
+      // Extend the block while hours are contiguous, still marked busy, AND the next row
+      // doesn't carry its own note (a note means a different customer/booking started there)
       let j = i;
       while (
         j + 1 < rows.length &&
         rows[j + 1].busy &&
-        rows[j + 1].slotMin === rows[j].slotMin + 60
+        rows[j + 1].slotMin === rows[j].slotMin + 60 &&
+        !rows[j + 1].note
       ){
         j++;
       }
@@ -735,13 +739,13 @@ function computeTherapistView(therapistId, bookings){
 
   const segments = [];
   upcoming.forEach(b => {
-    if (b.startMin > cursor){
+    if (b.startMin > cursor && (b.startMin - cursor) >= CONFIG.MIN_BOOKABLE_GAP_MIN){
       segments.push({ type: 'available', startMin: cursor, endMin: b.startMin });
     }
     segments.push({ type: 'busy', startMin: b.startMin, endMin: b.endMin, note: b.note });
     cursor = b.endMin;
   });
-  if (cursor < closeMin){
+  if (cursor < closeMin && (closeMin - cursor) >= CONFIG.MIN_BOOKABLE_GAP_MIN){
     segments.push({ type: 'available', startMin: cursor, endMin: closeMin });
   }
 
