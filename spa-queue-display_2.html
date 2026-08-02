@@ -545,7 +545,7 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  SHEET_ID: "1PPRgJhXK2LJd5sEBH2J9n3tzh6OiwgBbwhI3_PeBczE",
+  SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // tab holding hourly booking schedule
   SETTINGS_TAB: "Settings",              // tab holding shop name / phone etc.
@@ -749,7 +749,58 @@ function computeTherapistView(therapistId, bookings){
     segments.push({ type: 'available', startMin: cursor, endMin: closeMin });
   }
 
-  const nextThree = segments.slice(0, 3).map(s => ({
+  // Break long "available" stretches into 1-hour chunks so a single free window
+  // doesn't swallow the whole 3-slot display — always show real, distinct boxes.
+  // (A trailing remainder shorter than an hour gets folded into the previous chunk.)
+  const CHUNK_MIN = 60;
+  function roundToHalfHour(mins){
+    return Math.round(mins / 30) * 30;
+  }
+  function ceilToHalfHour(mins){
+    return Math.ceil(mins / 30) * 30;
+  }
+
+  const expanded = [];
+  segments.forEach(s => {
+    if (s.type !== 'available'){
+      expanded.push(s);
+      return;
+    }
+
+    // Round the leading edge UP to the next clean :00/:30 mark too (never down —
+    // that would claim availability before the therapist is actually free).
+    // If rounding up eats the whole window, just drop it rather than show a fake range.
+    let t = ceilToHalfHour(s.startMin);
+    if (t >= s.endMin) return;
+
+    while (t < s.endMin){
+      const rawEnd = Math.min(t + CHUNK_MIN, s.endMin);
+      let chunkEnd = rawEnd;
+
+      // Only round an artificial cut in the middle of a long free window — never round
+      // a real boundary (the start of an actual next booking, or true closing time)
+      if (rawEnd < s.endMin){
+        chunkEnd = roundToHalfHour(rawEnd);
+        if (chunkEnd <= t) chunkEnd = t + 30;
+        if (chunkEnd > s.endMin) chunkEnd = s.endMin;
+      }
+
+      // Fold a too-small leftover remainder into this chunk instead of a tiny orphan box
+      if (s.endMin - chunkEnd > 0 && s.endMin - chunkEnd < 30){
+        chunkEnd = s.endMin;
+      }
+
+      expanded.push({ type: 'available', startMin: t, endMin: chunkEnd });
+      t = chunkEnd;
+    }
+  });
+
+  // Always show exactly 3 boxes; pad with a neutral placeholder if there's truly nothing left today
+  while (expanded.length < 3){
+    expanded.push({ type: 'none' });
+  }
+
+  const nextThree = expanded.slice(0, 3).map(s => s.type === 'none' ? s : ({
     type: s.type,
     startLabel: minutesToLabel(s.startMin),
     endLabel: minutesToLabel(Math.min(s.endMin, closeMin)),
@@ -875,8 +926,16 @@ function renderCards(queueList, scheduleMap){
     previousStatusMap[id] = statusKey;
     const isLastHour = nowMinutes() >= CONFIG.CLOSE_HOUR * 60;
 
-    const nextBox = view.nextThree.length
-      ? view.nextThree.map((s, i) => {
+    const nextBox = view.nextThree
+      .map((s, i) => {
+          if (s.type === 'none'){
+            return `<div class="next-box next-box-empty${i === 0 ? ' next-box-first' : ' next-box-later'}">
+                <div class="next-box-icon">${calendarSvg()}</div>
+                <div>
+                  <div class="next-th avail">ยังไม่มีคิวจองเพิ่มเติมวันนี้ · <span class="en">No more bookings today</span></div>
+                </div>
+              </div>`;
+          }
           const isBusy = s.type === 'busy';
           const label = isBusy
             ? (s.note || 'ไม่ว่าง')
@@ -892,13 +951,7 @@ function renderCards(queueList, scheduleMap){
                 <div class="next-en">${subLabel}</div>
               </div>
             </div>`;
-        }).join('')
-      : `<div class="next-box next-box-empty">
-            <div class="next-box-icon">${calendarSvg()}</div>
-            <div>
-              <div class="next-th avail">ยังไม่มีคิวจองเพิ่มเติมวันนี้ · <span class="en">No more bookings today</span></div>
-            </div>
-          </div>`;
+        }).join('');
 
     const hint = available
       ? (isLastHour
