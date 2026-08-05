@@ -407,25 +407,6 @@
   .next-box svg{ width:100%; height:100%; color: var(--muted); }
   .next-th{ font-size: 18px; font-weight:700; }
   .next-th.avail{ color: var(--available); }
-
-  .closed-banner{
-    display:flex; align-items:center; justify-content:center; gap:14px;
-    border: 2px solid var(--espresso);
-    background: var(--bg-2);
-    border-radius: 14px;
-    padding: 20px 18px;
-  }
-  .closed-banner-icon{
-    width: 30px; height:30px; flex-shrink:0; color: var(--espresso);
-  }
-  .closed-banner-icon svg{ width:100%; height:100%; }
-  .closed-banner-text{
-    font-family: var(--font-thai);
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--espresso);
-    text-align: center;
-  }
   .next-th.booked{ color: var(--booking-brown); }
   .next-en{ font-size: 11px; color: var(--muted); font-family: var(--font-english); text-transform: uppercase; letter-spacing: 0.6px; }
 
@@ -570,15 +551,25 @@ const CONFIG = {
   SETTINGS_TAB: "Settings",              // tab holding shop name / phone etc.
   REFRESH_MS: 15000,                     // how often to re-check the sheet (ms)
   OPEN_HOUR: 12,                          // operating hours: 12:00 - 23:00
-  CLOSE_HOUR: 23
+  CLOSE_HOUR: 23,
+  MIN_BOOKABLE_GAP_MIN: 60                // a free gap shorter than this won't be shown as "Available"
 };
 
-function hourSlots(){
-  const slots = [];
-  for (let h = CONFIG.OPEN_HOUR; h <= CONFIG.CLOSE_HOUR; h++){
-    slots.push(String(h).padStart(2, '0') + ':00');
-  }
-  return slots;
+/* ---------------- Time helpers (minute precision) ---------------- */
+function minutesToLabel(mins){
+  const h = Math.floor(mins / 60) % 24;
+  const m = mins % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+function nowMinutes(){
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function isShopOpenNow(){
+  const hour = new Date().getHours();
+  return hour >= CONFIG.OPEN_HOUR && hour <= CONFIG.CLOSE_HOUR;
 }
 
 /* ---------------- CSV fetch + parse ---------------- */
@@ -636,63 +627,191 @@ async function fetchTab(tabName){
   return rowsToObjects(parseCSV(text));
 }
 
-/* ---------------- Rendering ---------------- */
-function isAvailable(statusRaw){
+/* ---------------- Parsing helpers for the hourly-grid format ---------------- */
+
+// Strict "HH:MM" parser for the optional exact-time override columns
+function parseExactTime(str){
+  // Lenient: tolerates Google Sheets auto-formatting a typed time as "14:08:00", extra spaces, etc.
+  const m = /(\d{1,2}):(\d{2})/.exec((str || '').trim());
+  if (!m) return null;
+  const h = parseInt(m[1], 10), mm = parseInt(m[2], 10);
+  if (h > 23 || mm > 59) return null;
+  return h * 60 + mm;
+}
+
+function isBusyStatus(statusRaw){
   const s = (statusRaw || '').trim().toLowerCase();
-  return s === 'ว่าง' || s === 'available' || s === 'free';
+  return s === 'ไม่ว่าง' || s === 'busy' || s === 'unavailable';
 }
 
-function currentSlotLabel(){
-  const now = new Date();
-  return String(now.getHours()).padStart(2, '0') + ':00';
-}
-
-function isShopOpenNow(){
-  const hour = new Date().getHours();
-  return hour >= CONFIG.OPEN_HOUR && hour <= CONFIG.CLOSE_HOUR;
-}
-
-// Build a map: Therapist_ID -> sorted array of { time, status, note }
+// Build a map: Therapist_ID -> sorted array of bookings { startMin, endMin, startLabel, endLabel, note }
+// Reads the hourly grid: Therapist_ID, Time_Slot, Status, Customer_Note, ห้อง, เบอร์โทร, คอร์สการนวด,
+// ชั่วโมง, ประเภทลูกค้า, หมายเหตุ, เวลาเริ่มจริง, เวลาสิ้นสุดจริง
+//
+// Consecutive "ไม่ว่าง" hours for the same therapist (continuation rows with a blank Customer_Note,
+// matching how the hotel already marks multi-hour bookings) are merged into a single booking block.
+// If เวลาเริ่มจริง / เวลาสิ้นสุดจริง are filled anywhere in that block, they override the hour-block
+// boundaries with the exact real time.
 function buildScheduleMap(scheduleRows){
-  const map = {};
+  const byTherapist = {};
   scheduleRows.forEach(r => {
     const id = (r.Therapist_ID || '').trim();
     if (!id) return;
-    if (!map[id]) map[id] = [];
-    map[id].push({
-      time: (r.Time_Slot || '').trim(),
-      status: (r.Status || '').trim(),
-      note: (r.Customer_Note || '').trim()
+    const slotMin = parseExactTime(r.Time_Slot);
+    if (slotMin === null) return; // skip malformed rows rather than crash
+    if (!byTherapist[id]) byTherapist[id] = [];
+    byTherapist[id].push({
+      slotMin,
+      busy: isBusyStatus(r.Status),
+      note: (r.Customer_Note || '').trim(),
+      course: (r['คอร์สการนวด'] || '').trim(),
+      customerType: (r['ประเภทลูกค้า'] || '').trim(),
+      actualStart: parseExactTime(r['เวลาเริ่มจริง']),
+      actualEnd: parseExactTime(r['เวลาสิ้นสุดจริง'])
     });
   });
-  Object.values(map).forEach(list => list.sort((a, b) => a.time.localeCompare(b.time)));
+
+  const map = {};
+  Object.keys(byTherapist).forEach(id => {
+    const rows = byTherapist[id].sort((a, b) => a.slotMin - b.slotMin);
+    const bookings = [];
+    let i = 0;
+    while (i < rows.length){
+      if (!rows[i].busy){ i++; continue; }
+
+      // Extend the block while hours are contiguous, still marked busy, AND the next row
+      // doesn't carry its own note (a note means a different customer/booking started there)
+      let j = i;
+      while (
+        j + 1 < rows.length &&
+        rows[j + 1].busy &&
+        rows[j + 1].slotMin === rows[j].slotMin + 60 &&
+        !rows[j + 1].note
+      ){
+        j++;
+      }
+
+      const block = rows.slice(i, j + 1);
+      const detailRow = block.find(b => b.note) || block[0];
+      const overrideStart = block.map(b => b.actualStart).find(v => v !== null);
+      const overrideEnd = [...block].reverse().map(b => b.actualEnd).find(v => v !== null);
+
+      let startMin = overrideStart !== undefined ? overrideStart : block[0].slotMin;
+      let endMin = overrideEnd !== undefined ? overrideEnd : (block[block.length - 1].slotMin + 60);
+      if (endMin <= startMin){ // guard against malformed manual overrides
+        startMin = block[0].slotMin;
+        endMin = block[block.length - 1].slotMin + 60;
+      }
+
+      const noteParts = [];
+      if (detailRow.note) noteParts.push(detailRow.note);
+      if (detailRow.course) noteParts.push(detailRow.course);
+      if (detailRow.customerType) noteParts.push(detailRow.customerType);
+
+      bookings.push({
+        startMin,
+        endMin,
+        startLabel: minutesToLabel(startMin),
+        endLabel: minutesToLabel(endMin),
+        note: noteParts.join(' - ')
+      });
+
+      i = j + 1;
+    }
+    map[id] = bookings.sort((a, b) => a.startMin - b.startMin);
+  });
+
   return map;
 }
 
 // Merge identity (Queue) with computed live status (Schedule) for one therapist
-function computeTherapistView(therapistId, slots){
-  const nowLabel = currentSlotLabel();
-  slots = slots || [];
+function computeTherapistView(therapistId, bookings){
+  bookings = bookings || [];
+  const nowMin = nowMinutes();
+  const closeMin = CONFIG.CLOSE_HOUR * 60 + 60; // end of the last operating hour (e.g. 23:00 hour -> closes 24:00)
 
-  const currentEntry = slots.find(s => s.time === nowLabel);
-  const currentlyBusy = currentEntry && !isAvailable(currentEntry.status);
+  const currentBooking = bookings.find(b => nowMin >= b.startMin && nowMin < b.endMin);
 
-  const bySlotTime = {};
-  slots.forEach(s => { bySlotTime[s.time] = s; });
+  // Build a timeline of what's coming up: alternating available / busy blocks,
+  // starting right after "now" (or right after the current session ends if busy)
+  let cursor = currentBooking ? currentBooking.endMin : nowMin;
+  const upcoming = bookings.filter(b => b.startMin >= cursor);
 
-  const fullDay = hourSlots().map(time => {
-    const entry = bySlotTime[time];
-    const booked = entry && !isAvailable(entry.status);
-    return { time, booked, note: booked ? entry.note : '' };
+  const segments = [];
+  upcoming.forEach(b => {
+    if (b.startMin > cursor && (b.startMin - cursor) >= CONFIG.MIN_BOOKABLE_GAP_MIN){
+      segments.push({ type: 'available', startMin: cursor, endMin: b.startMin });
+    }
+    segments.push({ type: 'busy', startMin: b.startMin, endMin: b.endMin, note: b.note });
+    cursor = b.endMin;
+  });
+  if (cursor < closeMin && (closeMin - cursor) >= CONFIG.MIN_BOOKABLE_GAP_MIN){
+    segments.push({ type: 'available', startMin: cursor, endMin: closeMin });
+  }
+
+  // Break long "available" stretches into 1-hour chunks so a single free window
+  // doesn't swallow the whole 3-slot display — always show real, distinct boxes.
+  // (A trailing remainder shorter than an hour gets folded into the previous chunk.)
+  const CHUNK_MIN = 60;
+  function roundToHalfHour(mins){
+    return Math.round(mins / 30) * 30;
+  }
+  function ceilToHalfHour(mins){
+    return Math.ceil(mins / 30) * 30;
+  }
+
+  const expanded = [];
+  segments.forEach(s => {
+    if (s.type !== 'available'){
+      expanded.push(s);
+      return;
+    }
+
+    // Round the leading edge UP to the next clean :00/:30 mark too (never down —
+    // that would claim availability before the therapist is actually free).
+    // If rounding up eats the whole window, just drop it rather than show a fake range.
+    let t = ceilToHalfHour(s.startMin);
+    if (t >= s.endMin) return;
+
+    while (t < s.endMin){
+      const rawEnd = Math.min(t + CHUNK_MIN, s.endMin);
+      let chunkEnd = rawEnd;
+
+      // Only round an artificial cut in the middle of a long free window — never round
+      // a real boundary (the start of an actual next booking, or true closing time)
+      if (rawEnd < s.endMin){
+        chunkEnd = roundToHalfHour(rawEnd);
+        if (chunkEnd <= t) chunkEnd = t + 30;
+        if (chunkEnd > s.endMin) chunkEnd = s.endMin;
+      }
+
+      // Fold a leftover remainder shorter than a full hour into this chunk — every
+      // box should represent a full hour (or more); never a sub-hour fragment
+      if (s.endMin - chunkEnd > 0 && s.endMin - chunkEnd < CHUNK_MIN){
+        chunkEnd = s.endMin;
+      }
+
+      expanded.push({ type: 'available', startMin: t, endMin: chunkEnd });
+      t = chunkEnd;
+    }
   });
 
-  // Next 3 slots in chronological order, starting right after the current hour
-  const startIdx = fullDay.findIndex(s => s.time > nowLabel);
-  const nextThree = startIdx === -1 ? [] : fullDay.slice(startIdx, startIdx + 3);
+  // Always show exactly 3 boxes; pad with a neutral placeholder if there's truly nothing left today
+  while (expanded.length < 3){
+    expanded.push({ type: 'none' });
+  }
+
+  const nextThree = expanded.slice(0, 3).map(s => s.type === 'none' ? s : ({
+    type: s.type,
+    startLabel: minutesToLabel(s.startMin),
+    endLabel: minutesToLabel(Math.min(s.endMin, closeMin)),
+    note: s.note || ''
+  }));
 
   return {
-    available: !currentlyBusy,
-    currentNote: currentlyBusy ? currentEntry.note : '',
+    available: !currentBooking,
+    currentNote: currentBooking ? currentBooking.note : '',
+    currentEndLabel: currentBooking ? currentBooking.endLabel : '',
     nextThree
   };
 }
@@ -802,34 +921,46 @@ function renderCards(queueList, scheduleMap){
 
     const view = computeTherapistView(id, scheduleMap[id]);
     const available = view.available;
-    const nowLabel = currentSlotLabel();
+    const nowLabel = minutesToLabel(nowMinutes());
     const statusKey = available ? 'available' : 'busy';
     const changed = !isFirstRender && previousStatusMap[id] !== undefined && previousStatusMap[id] !== statusKey;
     previousStatusMap[id] = statusKey;
-    const isLastHour = nowLabel === (String(CONFIG.CLOSE_HOUR).padStart(2, '0') + ':00');
+    const isLastHour = nowMinutes() >= CONFIG.CLOSE_HOUR * 60;
 
-    const nextBox = view.nextThree.length
-      ? view.nextThree.map((slot, i) => {
-          const label = slot.booked ? (slot.note || 'ไม่ว่าง') : `<span class="en">Available</span>`;
-          const cls = slot.booked ? 'next-th booked' : 'next-th avail';
-          return `<div class="next-box${i === 0 ? ' next-box-first' : ' next-box-later'}${slot.booked ? '' : ' next-box-empty'}">
+    const nextBox = view.nextThree
+      .map((s, i) => {
+          if (s.type === 'none'){
+            return `<div class="next-box next-box-empty${i === 0 ? ' next-box-first' : ' next-box-later'}">
+                <div class="next-box-icon">${calendarSvg()}</div>
+                <div>
+                  <div class="next-th avail">ยังไม่มีคิวจองเพิ่มเติมวันนี้ · <span class="en">No more bookings today</span></div>
+                </div>
+              </div>`;
+          }
+          const isBusy = s.type === 'busy';
+          const label = isBusy
+            ? (s.note || 'ไม่ว่าง')
+            : `<span class="en">Available</span>`;
+          const cls = isBusy ? 'next-th booked' : 'next-th avail';
+          const subLabel = isBusy
+            ? (i === 0 ? 'Next booking' : 'Upcoming')
+            : (i === 0 ? 'Open now' : 'Open');
+          return `<div class="next-box${i === 0 ? ' next-box-first' : ' next-box-later'}${isBusy ? '' : ' next-box-empty'}">
               <div class="next-box-icon">${calendarSvg()}</div>
               <div>
-                <div class="${cls}"><span class="en">${slot.time}</span> · ${label}</div>
-                <div class="next-en">${i === 0 ? 'Next hour' : 'Upcoming'}</div>
+                <div class="${cls}"><span class="en">${s.startLabel}-${s.endLabel}</span> · ${label}</div>
+                <div class="next-en">${subLabel}</div>
               </div>
             </div>`;
-        }).join('')
-      : `<div class="closed-banner">
-            <div class="closed-banner-icon">${calendarSvg()}</div>
-            <div class="closed-banner-text">ปิดให้บริการแล้ววันนี้ · <span class="en">Closed for today</span></div>
-          </div>`;
+        }).join('');
 
     const hint = available
       ? (isLastHour
           ? `กำลังอยู่ให้บริการคิวสุดท้าย · <span class="en">Last service today</span>`
           : `พร้อมรับลูกค้าทันที · <span class="en">Ready for walk-in</span>`)
-      : (view.currentNote ? view.currentNote + ' · กำลังให้บริการอยู่' : `กำลังให้บริการ · <span class="en">Currently in session</span>`);
+      : (view.currentNote
+          ? `${view.currentNote} · ถึง <span class="en">${view.currentEndLabel}</span> น.`
+          : `กำลังให้บริการ · <span class="en">Currently in session</span>`);
 
     return `
     <div class="card${isFirstRender ? ' card-enter' : ''}${changed ? ' status-flash' : ''}"${enterStyle}>
