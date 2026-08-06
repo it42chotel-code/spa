@@ -502,7 +502,7 @@
   <!-- Sync status -->
   <div class="sync-strip">
     <span class="dot pulse" id="syncDot"></span>
-    <span id="syncText">กำลังเชื่อมต่อ <span class="en">Google Sheet</span>…</span>
+    <span id="syncText">V3.2 · กำลังเชื่อมต่อ <span class="en">Google Sheet</span>…</span>
   </div>
 
   <!-- Cards -->
@@ -545,6 +545,7 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
+  BUILD: "V3.2",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -725,72 +726,138 @@ function isBusyStatus(statusRaw){
 // matching how the hotel already marks multi-hour bookings) are merged into a single booking block.
 // If เวลาเริ่มจริง / เวลาสิ้นสุดจริง are filled anywhere in that block, they override the hour-block
 // boundaries with the exact real time.
+function fieldByNameOrPosition(row, name, position){
+  const direct = row[name];
+  if (direct !== undefined && cleanCell(direct) !== '') return direct;
+  const keys = Object.keys(row);
+  return keys[position] !== undefined ? row[keys[position]] : '';
+}
+
+function parseDurationMinutes(value){
+  const s = cleanCell(value).replace(',', '.');
+  if (!s) return null;
+  const n = Number(s);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n * 60);
+}
+
 function buildScheduleMap(scheduleRows){
   const byTherapist = {};
+
   scheduleRows.forEach(r => {
-    const id = normalizeTherapistId(r.Therapist_ID);
+    // Positional fallback: A=ID, B=time, C=status, D=customer note,
+    // E=room, F=phone, G=course, H=hours, I=price,
+    // J=customer type, K=remark, L=actual start, M=actual end, N=salesperson.
+    const id = normalizeTherapistId(fieldByNameOrPosition(r, 'Therapist_ID', 0));
     if (!id) return;
-    const slotMin = parseExactTime(r.Time_Slot);
-    if (slotMin === null) return; // skip malformed rows rather than crash
+
+    const slotMin = parseExactTime(fieldByNameOrPosition(r, 'Time_Slot', 1));
+    if (slotMin === null) return;
+
+    const note = cleanCell(fieldByNameOrPosition(r, 'Customer_Note', 3));
+    const room = cleanCell(fieldByNameOrPosition(r, 'ห้อง', 4));
+    const phone = cleanCell(fieldByNameOrPosition(r, 'เบอร์โทร', 5));
+    const course = cleanCell(fieldByNameOrPosition(r, 'คอร์สการนวด', 6));
+    const durationRaw = cleanCell(fieldByNameOrPosition(r, 'ชั่วโมง', 7));
+    const price = cleanCell(fieldByNameOrPosition(r, 'ราคา', 8));
+    const customerType = cleanCell(fieldByNameOrPosition(r, 'ประเภทลูกค้า', 9));
+    const remark = cleanCell(fieldByNameOrPosition(r, 'หมายเหตุ', 10));
+    const actualStart = parseExactTime(fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11));
+    const actualEnd = parseExactTime(fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12));
+    const salesperson = cleanCell(fieldByNameOrPosition(r, 'พนักงานขาย', 13));
+
     if (!byTherapist[id]) byTherapist[id] = [];
     byTherapist[id].push({
       slotMin,
-      busy: isBusyStatus(r.Status),
-      note: (r.Customer_Note || '').trim(),
-      course: (r['คอร์สการนวด'] || '').trim(),
-      customerType: (r['ประเภทลูกค้า'] || '').trim(),
-      actualStart: parseExactTime(r['เวลาเริ่มจริง']),
-      actualEnd: parseExactTime(r['เวลาสิ้นสุดจริง'])
+      busy: isBusyStatus(fieldByNameOrPosition(r, 'Status', 2)),
+      note,
+      room,
+      phone,
+      course,
+      durationMin: parseDurationMinutes(durationRaw),
+      price,
+      customerType,
+      remark,
+      actualStart,
+      actualEnd,
+      salesperson,
+      // A busy row containing its own booking details is a NEW booking.
+      // Only a completely blank busy row is treated as a continuation row.
+      hasOwnBookingData: Boolean(
+        note || room || phone || course || durationRaw || price ||
+        customerType || remark || salesperson ||
+        actualStart !== null || actualEnd !== null
+      )
     });
   });
 
   const map = {};
+
   Object.keys(byTherapist).forEach(id => {
     const rows = byTherapist[id].sort((a, b) => a.slotMin - b.slotMin);
     const bookings = [];
     let i = 0;
-    while (i < rows.length){
-      if (!rows[i].busy){ i++; continue; }
 
-      // Extend the block while hours are contiguous, still marked busy, AND the next row
-      // doesn't carry its own note (a note means a different customer/booking started there)
+    while (i < rows.length){
+      if (!rows[i].busy){
+        i++;
+        continue;
+      }
+
+      // IMPORTANT: each busy row with room/course/hours/real time is a separate queue.
+      // Merge only following busy rows that are truly blank continuation rows.
       let j = i;
       while (
         j + 1 < rows.length &&
         rows[j + 1].busy &&
         rows[j + 1].slotMin === rows[j].slotMin + 60 &&
-        !rows[j + 1].note
+        !rows[j + 1].hasOwnBookingData
       ){
         j++;
       }
 
       const block = rows.slice(i, j + 1);
-      const detailRow = block.find(b => b.note) || block[0];
-      const overrideStart = block.map(b => b.actualStart).find(v => v !== null);
-      const overrideEnd = [...block].reverse().map(b => b.actualEnd).find(v => v !== null);
+      const detailRow = block.find(b => b.hasOwnBookingData) || block[0];
 
-      let startMin = overrideStart !== undefined ? overrideStart : block[0].slotMin;
-      let endMin = overrideEnd !== undefined ? overrideEnd : (block[block.length - 1].slotMin + 60);
-      if (endMin <= startMin){ // guard against malformed manual overrides
-        startMin = block[0].slotMin;
+      const firstActualStart = block.map(b => b.actualStart).find(v => v !== null);
+      const lastActualEnd = [...block].reverse().map(b => b.actualEnd).find(v => v !== null);
+
+      let startMin = firstActualStart !== undefined ? firstActualStart : block[0].slotMin;
+      let endMin;
+
+      if (lastActualEnd !== undefined){
+        endMin = lastActualEnd;
+      } else if (detailRow.durationMin){
+        endMin = startMin + detailRow.durationMin;
+      } else {
         endMin = block[block.length - 1].slotMin + 60;
       }
 
+      // Guard against incorrectly typed end times.
+      if (!Number.isFinite(endMin) || endMin <= startMin){
+        endMin = detailRow.durationMin
+          ? startMin + detailRow.durationMin
+          : block[block.length - 1].slotMin + 60;
+      }
+
       const noteParts = [];
+      if (detailRow.room) noteParts.push(`ห้อง ${detailRow.room}`);
       if (detailRow.note) noteParts.push(detailRow.note);
       if (detailRow.course) noteParts.push(detailRow.course);
       if (detailRow.customerType) noteParts.push(detailRow.customerType);
+      if (detailRow.remark) noteParts.push(detailRow.remark);
 
       bookings.push({
         startMin,
         endMin,
         startLabel: minutesToLabel(startMin),
         endLabel: minutesToLabel(endMin),
-        note: noteParts.join(' - ')
+        note: noteParts.join(' · ')
       });
 
       i = j + 1;
     }
+
     map[id] = bookings.sort((a, b) => a.startMin - b.startMin);
   });
 
@@ -927,7 +994,7 @@ function renderCards(queueList, scheduleMap){
   const isFirstRender = !hasRenderedOnce;
 
   grid.innerHTML = queueList.map((t, cardIndex) => {
-    const id = normalizeTherapistId(t.ID);
+    const id = normalizeTherapistId(t.ID || t.Therapist_ID || fieldByNameOrPosition(t, 'ID', 0));
     const nameTh = t.Name_TH || id || 'หมอนวด';
     const nameEn = t.Name_EN || '';
     const photo = t.Photo_URL
@@ -1074,6 +1141,28 @@ function applySettings(settingsRows){
 }
 
 /* ---------------- Sync loop ---------------- */
+async function fetchScheduleRows(){
+  const attempts = [
+    () => fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID),
+    () => fetchTab(CONFIG.SCHEDULE_TAB)
+  ];
+  let lastError = null;
+  for (const attempt of attempts){
+    try{
+      const rows = await attempt();
+      if (!rows.length) return rows;
+      const first = rows[0] || {};
+      const id = fieldByNameOrPosition(first, 'Therapist_ID', 0);
+      const time = fieldByNameOrPosition(first, 'Time_Slot', 1);
+      if (cleanCell(id) || cleanCell(time)) return rows;
+    } catch (err){
+      lastError = err;
+    }
+  }
+  if (lastError) throw lastError;
+  return [];
+}
+
 let lastGoodQueue = null;
 let lastGoodScheduleMap = null;
 
@@ -1083,7 +1172,7 @@ async function syncNow(){
   try{
     const [queue, scheduleRows, settings] = await Promise.all([
       fetchTab(CONFIG.QUEUE_TAB),
-      fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID),
+      fetchScheduleRows(),
       fetchTab(CONFIG.SETTINGS_TAB).catch(() => [])
     ]);
     const scheduleMap = buildScheduleMap(scheduleRows);
@@ -1093,7 +1182,12 @@ async function syncNow(){
     if (settings.length) applySettings(settings);
     dot.classList.remove('warn');
     const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
-    text.textContent = `เชื่อมต่อกับ Google Sheet แล้ว · พบคิว ${bookingCount} รายการ · อัปเดตล่าสุด ` + new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const busyRowCount = scheduleRows.filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2))).length;
+    text.textContent = `${CONFIG.BUILD} · เชื่อมต่อ Google Sheet แล้ว · อ่านตาราง ${scheduleRows.length} แถว · แถวไม่ว่าง ${busyRowCount} · คิว ${bookingCount} รายการ · อัปเดต ` + new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    if (busyRowCount > 0 && bookingCount === 0){
+      dot.classList.add('warn');
+      text.textContent = `${CONFIG.BUILD} · พบแถวไม่ว่าง ${busyRowCount} แถว แต่แปลงเป็นคิวไม่ได้ — โปรดตรวจรูปแบบเวลา/หัวตาราง`;
+    }
   } catch (err){
     dot.classList.add('warn');
     console.error('[Spa Queue Sync Error]', err);
