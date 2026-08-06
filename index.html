@@ -547,7 +547,8 @@
 const CONFIG = {
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
-  SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // tab holding hourly booking schedule
+  SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
+  SCHEDULE_GID: "1985324533",             // exact worksheet from the supplied link
   SETTINGS_TAB: "Settings",              // tab holding shop name / phone etc.
   REFRESH_MS: 15000,                     // how often to re-check the sheet (ms)
   OPEN_HOUR: 12,                          // operating hours: 12:00 - 23:00
@@ -573,8 +574,64 @@ function isShopOpenNow(){
 }
 
 /* ---------------- CSV fetch + parse ---------------- */
-function sheetCsvUrl(tabName){
-  return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&_=${Date.now()}`;
+function sheetCsvUrl(tabName, gid = ''){
+  // Use gid for the schedule sheet so the display reads the exact worksheet
+  // from the supplied link even when that worksheet is renamed later.
+  const selector = gid
+    ? `gid=${encodeURIComponent(gid)}`
+    : `sheet=${encodeURIComponent(tabName)}`;
+  return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&${selector}&_=${Date.now()}`;
+}
+
+function cleanCell(value){
+  return String(value ?? '')
+    .replace(/^\uFEFF/, '')
+    .replace(/[\u200B-\u200D\u2060]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .trim();
+}
+
+function headerToken(value){
+  return cleanCell(value)
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[_\-./\\]/g, '');
+}
+
+const HEADER_ALIASES = {
+  therapistid: 'Therapist_ID',
+  timeslot: 'Time_Slot',
+  status: 'Status',
+  customernote: 'Customer_Note',
+  id: 'ID',
+  nameth: 'Name_TH',
+  nameen: 'Name_EN',
+  photourl: 'Photo_URL',
+  workingtoday: 'Working_Today',
+  key: 'Key',
+  value: 'Value',
+  ห้อง: 'ห้อง',
+  เบอร์โทร: 'เบอร์โทร',
+  คอร์สการนวด: 'คอร์สการนวด',
+  ชั่วโมง: 'ชั่วโมง',
+  ราคา: 'ราคา',
+  ประเภทลูกค้า: 'ประเภทลูกค้า',
+  หมายเหตุ: 'หมายเหตุ',
+  เวลาเริ่มจริง: 'เวลาเริ่มจริง',
+  เวลาสิ้นสุดจริง: 'เวลาสิ้นสุดจริง',
+  พนักงานขาย: 'พนักงานขาย'
+};
+
+function canonicalHeader(value){
+  const cleaned = cleanCell(value).replace(/\s+/g, ' ');
+  return HEADER_ALIASES[headerToken(cleaned)] || cleaned;
+}
+
+function normalizeTherapistId(value){
+  const s = cleanCell(value);
+  // Google Sheets can export numeric IDs as 1.0 instead of 1.
+  if (/^\d+(?:\.0+)?$/.test(s)) return String(parseInt(s, 10));
+  return s;
 }
 
 function parseCSV(text){
@@ -596,52 +653,68 @@ function parseCSV(text){
     }
   }
   if (field.length || row.length){ row.push(field); rows.push(row); }
-  return rows.filter(r => r.some(f => f.trim() !== ''));
+  return rows.filter(r => r.some(f => cleanCell(f) !== ''));
 }
 
 function rowsToObjects(rows){
   if (rows.length < 1) return [];
-  const headers = rows[0].map(h => h.trim());
+  // Accept wrapped headers, invisible spaces/BOMs, and small header variations.
+  const headers = rows[0].map(canonicalHeader);
   return rows.slice(1).map(r => {
     const obj = {};
-    headers.forEach((h, i) => obj[h] = (r[i] || '').trim());
+    headers.forEach((h, i) => obj[h] = cleanCell(r[i]));
     return obj;
   });
 }
 
-async function fetchTab(tabName){
-  const url = sheetCsvUrl(tabName);
+async function fetchTab(tabName, gid = ''){
+  const url = sheetCsvUrl(tabName, gid);
+  const sourceLabel = gid ? `${tabName} (gid ${gid})` : tabName;
   let res;
   try{
     res = await fetch(url, { cache: "no-store" });
   } catch (networkErr){
-    throw new Error(`เชื่อมต่อแท็บ "${tabName}" ไม่ได้ (network/CORS): ${networkErr.message}`);
+    throw new Error(`เชื่อมต่อแท็บ "${sourceLabel}" ไม่ได้ (network/CORS): ${networkErr.message}`);
   }
   if (!res.ok){
-    throw new Error(`แท็บ "${tabName}" ตอบกลับ HTTP ${res.status} — ตรวจสอบว่าชื่อแท็บตรงและแชร์ "ทุกคนที่มีลิงก์ ดูได้" แล้ว`);
+    throw new Error(`แท็บ "${sourceLabel}" ตอบกลับ HTTP ${res.status} — ตรวจสอบว่าแชร์ "ทุกคนที่มีลิงก์ ดูได้" แล้ว`);
   }
-  const text = await res.text();
-  if (/^\s*<!DOCTYPE html/i.test(text) || /accounts\.google\.com/i.test(text)){
-    throw new Error(`แท็บ "${tabName}" ไม่คืนค่าเป็น CSV (อาจเป็นเพราะยังไม่ได้แชร์แบบสาธารณะ หรือ Sheet ID/ชื่อแท็บไม่ตรง)`);
+  const csvText = await res.text();
+  if (/^\s*<!DOCTYPE html/i.test(csvText) || /accounts\.google\.com/i.test(csvText)){
+    throw new Error(`แท็บ "${sourceLabel}" ไม่คืนค่าเป็น CSV (อาจยังไม่ได้แชร์แบบสาธารณะ หรือระบุแท็บไม่ตรง)`);
   }
-  return rowsToObjects(parseCSV(text));
+  return rowsToObjects(parseCSV(csvText));
 }
 
 /* ---------------- Parsing helpers for the hourly-grid format ---------------- */
 
-// Strict "HH:MM" parser for the optional exact-time override columns
-function parseExactTime(str){
-  // Lenient: tolerates Google Sheets auto-formatting a typed time as "14:08:00", extra spaces, etc.
-  const m = /(\d{1,2}):(\d{2})/.exec((str || '').trim());
+// Flexible time parser for Google Sheets CSV values.
+// Supports 18:00, 18:00:00, 18.00, 6:00 PM, and fractional days such as 0.75.
+function parseExactTime(value){
+  const s = cleanCell(value);
+  if (!s) return null;
+
+  if (/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(s)){
+    const fraction = Number(s);
+    if (Number.isFinite(fraction)) return Math.round((fraction % 1) * 1440) % 1440;
+  }
+
+  const m = /(\d{1,2})\s*[:.]\s*(\d{2})/.exec(s);
   if (!m) return null;
-  const h = parseInt(m[1], 10), mm = parseInt(m[2], 10);
+  let h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  const meridiem = /\b(p\.?m\.?)\b/i.test(s) ? 'pm'
+    : (/\b(a\.?m\.?)\b/i.test(s) ? 'am' : '');
+
+  if (meridiem === 'pm' && h < 12) h += 12;
+  if (meridiem === 'am' && h === 12) h = 0;
   if (h > 23 || mm > 59) return null;
   return h * 60 + mm;
 }
 
 function isBusyStatus(statusRaw){
-  const s = (statusRaw || '').trim().toLowerCase();
-  return s === 'ไม่ว่าง' || s === 'busy' || s === 'unavailable';
+  const s = cleanCell(statusRaw).toLowerCase().replace(/\s+/g, '');
+  return s === 'ไม่ว่าง' || s === 'busy' || s === 'unavailable' || s === 'booked';
 }
 
 // Build a map: Therapist_ID -> sorted array of bookings { startMin, endMin, startLabel, endLabel, note }
@@ -655,7 +728,7 @@ function isBusyStatus(statusRaw){
 function buildScheduleMap(scheduleRows){
   const byTherapist = {};
   scheduleRows.forEach(r => {
-    const id = (r.Therapist_ID || '').trim();
+    const id = normalizeTherapistId(r.Therapist_ID);
     if (!id) return;
     const slotMin = parseExactTime(r.Time_Slot);
     if (slotMin === null) return; // skip malformed rows rather than crash
@@ -854,7 +927,7 @@ function renderCards(queueList, scheduleMap){
   const isFirstRender = !hasRenderedOnce;
 
   grid.innerHTML = queueList.map((t, cardIndex) => {
-    const id = (t.ID || '').trim();
+    const id = normalizeTherapistId(t.ID);
     const nameTh = t.Name_TH || id || 'หมอนวด';
     const nameEn = t.Name_EN || '';
     const photo = t.Photo_URL
@@ -1010,7 +1083,7 @@ async function syncNow(){
   try{
     const [queue, scheduleRows, settings] = await Promise.all([
       fetchTab(CONFIG.QUEUE_TAB),
-      fetchTab(CONFIG.SCHEDULE_TAB),
+      fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID),
       fetchTab(CONFIG.SETTINGS_TAB).catch(() => [])
     ]);
     const scheduleMap = buildScheduleMap(scheduleRows);
@@ -1019,7 +1092,8 @@ async function syncNow(){
     renderCards(queue, scheduleMap);
     if (settings.length) applySettings(settings);
     dot.classList.remove('warn');
-    text.textContent = 'เชื่อมต่อกับ Google Sheet แล้ว · อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
+    text.textContent = `เชื่อมต่อกับ Google Sheet แล้ว · พบคิว ${bookingCount} รายการ · อัปเดตล่าสุด ` + new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   } catch (err){
     dot.classList.add('warn');
     console.error('[Spa Queue Sync Error]', err);
