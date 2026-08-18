@@ -412,6 +412,48 @@
   .next-th.no-more{ color: #4A4A4A; }
   .next-en{ font-size: 11px; color: var(--muted); font-family: var(--font-english); text-transform: uppercase; letter-spacing: 0.6px; }
 
+  /* Customer information shown on current and upcoming booked queues */
+  .customer-info{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:7px;
+  }
+  .customer-info-item{
+    display:inline-flex;
+    align-items:center;
+    min-height:26px;
+    padding:4px 9px;
+    border-radius:999px;
+    border:1px solid rgba(107,74,50,.11);
+    background:rgba(255,253,248,.68);
+    color:#5B4A3B;
+    font-size:12px;
+    font-weight:650;
+    line-height:1.25;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.65);
+  }
+  .state-busy .status-hint .customer-info{ margin-top:8px; }
+  .state-busy .status-hint .customer-info-item{
+    color:#60483D;
+    background:rgba(255,248,244,.72);
+    border-color:rgba(166,70,47,.13);
+  }
+  .customer-info-item.customer-type{
+    background:rgba(198,162,77,.10);
+    border-color:rgba(198,162,77,.22);
+  }
+  .current-until{
+    margin-top:7px;
+    font-size:12px;
+    font-weight:700;
+    color:var(--busy);
+  }
+  @media (max-width:640px){
+    .customer-info{ gap:5px; }
+    .customer-info-item{ font-size:11px; padding:4px 8px; }
+  }
+
   /* ---------- Footer ---------- */
   .footer{
     margin-top: 26px;
@@ -1144,6 +1186,268 @@
     .header{ border-radius:0; }
   }
 
+
+
+  /* ============================================================
+     V4.7 — display resilience, customer status, TV controls,
+     approaching-queue energy and bilingual crossfade
+     ============================================================ */
+
+  /* Soft Thai / English automatic crossfade. */
+  .lang-pair{
+    display:inline-grid;
+    align-items:center;
+    vertical-align:middle;
+  }
+  .lang-pair.lang-pair-block{ display:grid; width:100%; }
+  .lang-pair > .lang-th-text,
+  .lang-pair > .lang-en-text{
+    grid-area:1 / 1;
+    transition:opacity .75s ease, transform .75s cubic-bezier(.22,.61,.36,1), filter .75s ease;
+  }
+  body:not(.language-en) .lang-pair > .lang-th-text{
+    opacity:1; transform:translateY(0); filter:blur(0);
+  }
+  body:not(.language-en) .lang-pair > .lang-en-text{
+    opacity:0; transform:translateY(5px); filter:blur(2px); pointer-events:none;
+  }
+  body.language-en .lang-pair > .lang-th-text{
+    opacity:0; transform:translateY(-5px); filter:blur(2px); pointer-events:none;
+  }
+  body.language-en .lang-pair > .lang-en-text{
+    opacity:1; transform:translateY(0); filter:blur(0);
+  }
+  .hero-title-switch{ min-height:54px; }
+  .hero-title-switch .title-th,
+  .hero-title-switch .title-en{ margin:0; align-self:center; }
+  .hero-title-switch .title-en{ font-size:clamp(21px,2.5vw,32px); }
+  .language-indicator{
+    min-width:44px;
+    font-family:var(--font-english);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.9px;
+    color:var(--espresso);
+  }
+
+  /* Customer-facing sync state; five taps reveal temporary diagnostics. */
+  .sync-strip{
+    cursor:pointer;
+    user-select:none;
+    max-width:min(92vw, 980px);
+    text-align:center;
+    transition:background .35s ease, border-color .35s ease, color .35s ease, box-shadow .35s ease, transform .25s ease;
+  }
+  .sync-strip:active{ transform:scale(.985); }
+  .sync-strip.status-warn{
+    color:#8a6424;
+    background:#fff8e6;
+    border-color:rgba(198,162,77,.32);
+    box-shadow:0 5px 16px -12px rgba(154,108,28,.65);
+  }
+  .sync-strip.status-critical,
+  .sync-strip.status-offline{
+    color:#94442f;
+    background:#fff0e9;
+    border-color:rgba(166,70,47,.30);
+    box-shadow:0 6px 18px -12px rgba(166,70,47,.65);
+  }
+  .sync-strip.debug-active{
+    border-style:dashed;
+    border-color:rgba(107,74,50,.40);
+  }
+  .dot.critical{ background:var(--busy); }
+
+  /* Last five minutes: shift the live session panel to premium gold. */
+  .session-progress.is-final-minutes{
+    background:linear-gradient(135deg, rgba(198,162,77,.14), rgba(255,249,224,.76));
+    border-color:rgba(198,162,77,.36);
+    box-shadow:0 0 0 1px rgba(255,255,255,.55) inset, 0 0 22px rgba(198,162,77,.18);
+    animation:finalMinuteGlow 1.9s ease-in-out infinite;
+  }
+  .session-progress.is-final-minutes .session-progress-title,
+  .session-progress.is-final-minutes .session-remaining{ color:#9a6c1c; }
+  .session-progress.is-final-minutes .session-progress-track{ background:rgba(198,162,77,.16); }
+  .session-progress.is-final-minutes .session-progress-bar{
+    background:linear-gradient(90deg,#a97824,#d6ad4e,#f1d784,#d6ad4e,#a97824);
+    background-size:240% 100%;
+    box-shadow:0 0 14px rgba(198,162,77,.38);
+  }
+  @keyframes finalMinuteGlow{
+    0%,100%{ transform:translateY(0); box-shadow:0 0 0 1px rgba(255,255,255,.55) inset,0 0 12px rgba(198,162,77,.10); }
+    50%{ transform:translateY(-1px); box-shadow:0 0 0 1px rgba(255,255,255,.70) inset,0 0 28px rgba(198,162,77,.24); }
+  }
+  .room-prep-message{
+    display:none;
+    margin-top:9px;
+    padding:7px 10px;
+    border-radius:9px;
+    background:rgba(198,162,77,.11);
+    color:#865f22;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.15px;
+  }
+  .session-progress.is-preparing .room-prep-message{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    animation:prepMessageIn .45s ease both;
+  }
+  .room-prep-message::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 0 4px rgba(198,162,77,.14),0 0 12px rgba(198,162,77,.40);
+    animation:prepDot 1.45s ease-in-out infinite;
+  }
+  @keyframes prepMessageIn{ from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes prepDot{ 0%,100%{transform:scale(.9);opacity:.65} 50%{transform:scale(1.2);opacity:1} }
+
+  /* Rotating aura around a booking that is about to begin. */
+  .next-box.queue-imminent{
+    overflow:visible;
+    isolation:isolate;
+    border-color:rgba(198,162,77,.48);
+    background:linear-gradient(135deg,rgba(255,248,218,.84),rgba(239,230,211,.70));
+    box-shadow:0 0 0 1px rgba(255,255,255,.65) inset,0 10px 30px -20px rgba(198,162,77,.80),0 0 22px rgba(198,162,77,.16);
+  }
+  .next-box.queue-imminent::after{
+    content:"";
+    position:absolute;
+    inset:-3px;
+    border-radius:inherit;
+    padding:2px;
+    background:conic-gradient(from 0deg,transparent 0 18%,rgba(198,162,77,.18) 25%,#f1d784 38%,#b98228 49%,transparent 61% 100%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    pointer-events:none;
+    z-index:3;
+    animation:queueOrbit 1.8s linear infinite;
+    filter:drop-shadow(0 0 5px rgba(198,162,77,.42));
+  }
+  .next-box.queue-imminent .next-box-icon{
+    background:#fff9e8;
+    color:#9a6c1c;
+    box-shadow:0 0 0 5px rgba(198,162,77,.12),0 0 16px rgba(198,162,77,.24);
+    animation:imminentIcon 1.65s ease-in-out infinite;
+  }
+  @keyframes queueOrbit{ to{ transform:rotate(360deg); } }
+  @keyframes imminentIcon{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+  .queue-prep-note{
+    display:none;
+    margin-top:4px;
+    color:#916723;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.25px;
+  }
+  .next-box.queue-imminent .queue-prep-note{ display:block; animation:prepMessageIn .45s ease both; }
+
+  /* Day off / not working today should be unmistakable, not faded away. */
+  .card.state-off{
+    opacity:1;
+    border:2px solid rgba(119,123,130,.28);
+    background:
+      repeating-linear-gradient(135deg,rgba(119,123,130,.035) 0 12px,transparent 12px 24px),
+      linear-gradient(160deg,#fffdf8,#f1ece3);
+  }
+  .card.state-off .card-top{
+    filter:none;
+    background:linear-gradient(145deg,#68625a,#777064);
+    box-shadow:inset 0 -3px 0 rgba(231,206,140,.28);
+  }
+  .card.state-off .pill.off{
+    background:#fff4cf;
+    color:#715521;
+    border-color:rgba(231,206,140,.48);
+    box-shadow:0 0 0 5px rgba(231,206,140,.08);
+  }
+  .card.state-off .day-off-body{ min-height:290px; padding:42px 24px; }
+  .card.state-off .day-off-icon{
+    width:78px;height:78px;
+    padding:13px;
+    border-radius:50%;
+    background:#ede8df;
+    box-shadow:0 0 0 9px rgba(119,123,130,.08),0 18px 34px -25px rgba(36,24,17,.75);
+  }
+  .card.state-off .day-off-text{ color:#54575c; font-size:clamp(30px,4vw,46px); }
+  .card.state-off .day-off-sub{ color:#64676c; font-size:15px; font-weight:650; }
+
+  /* Discreet TV/tablet controls. */
+  .display-controls{
+    position:fixed;
+    right:16px;
+    bottom:16px;
+    z-index:80;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    padding:7px;
+    border-radius:999px;
+    background:rgba(255,253,248,.76);
+    border:1px solid rgba(255,255,255,.70);
+    box-shadow:0 12px 32px -20px rgba(36,24,17,.80);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    opacity:.72;
+    transition:opacity .25s ease,transform .25s ease;
+  }
+  .display-controls:hover,.display-controls:focus-within{ opacity:1; transform:translateY(-2px); }
+  .display-control{
+    border:0;
+    width:38px;height:38px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    color:var(--espresso);
+    background:rgba(239,230,211,.72);
+    transition:transform .2s ease,background .2s ease,box-shadow .2s ease;
+  }
+  .display-control:hover{ transform:scale(1.06); background:#fff8e8; box-shadow:0 7px 16px -11px rgba(36,24,17,.80); }
+  .display-control svg{ width:18px;height:18px; }
+  .wake-indicator.is-active{ color:var(--available); background:rgba(228,239,227,.90); }
+  .wake-indicator.is-unavailable{ color:#858078; }
+  :fullscreen .display-controls{ right:20px;bottom:20px; }
+
+  @media (max-width:640px){
+    .display-controls{ right:10px;bottom:10px; }
+    .display-control{ width:35px;height:35px; }
+    .hero-title-switch{ min-height:48px; }
+  }
+
+
+  /* V5.0 — Technical sync/debug information stays hidden on the public display.
+     The underlying sync/retry/watchdog continues to run normally. */
+  .sync-strip{
+    display:none !important;
+  }
+
+
+  /* V5.1 Stable — public-facing sync warning, technical diagnostics remain hidden */
+  .sync-strip{ display:none !important; }
+  #publicSyncWarning{
+    display:none;
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    z-index:9999;
+    max-width:min(92vw, 820px);
+    padding:10px 16px;
+    border-radius:999px;
+    background:rgba(255,248,235,.96);
+    border:1px solid rgba(166,70,47,.28);
+    box-shadow:0 10px 30px rgba(36,24,17,.18);
+    color:#7A3527;
+    font-weight:700;
+    text-align:center;
+    backdrop-filter:blur(10px);
+  }
+  #publicSyncWarning.show{ display:block; }
+
 </style>
 </head>
 <body>
@@ -1166,11 +1470,16 @@
     </div>
 
     <div class="title-block">
-      <div class="title-th" id="shopNameTh">ยินดีต้อนรับสู่บริการสปา</div>
-      <div class="title-en" id="shopNameEn">Welcome to Our Spa</div>
+      <div class="hero-title-switch lang-pair lang-pair-block">
+        <div class="title-th lang-th-text" id="shopNameTh">ยินดีต้อนรับสู่บริการสปา</div>
+        <div class="title-en lang-en-text" id="shopNameEn">Welcome to Our Spa</div>
+      </div>
       <div class="subtitle">
         <span class="rule"></span>
-        <span id="taglineTh">กรุณาตรวจสอบคิวว่างของหมอนวด</span>
+        <span class="lang-pair">
+          <span class="lang-th-text" id="taglineTh">กรุณาตรวจสอบคิวว่างของหมอนวด</span>
+          <span class="lang-en-text en" id="taglineEn">Please check therapist availability</span>
+        </span>
         <span class="rule"></span>
       </div>
     </div>
@@ -1185,9 +1494,9 @@
   </div>
 
   <!-- Sync status -->
-  <div class="sync-strip">
+  <div class="sync-strip" id="syncStrip" role="status" aria-live="polite" title="แตะ 5 ครั้งเพื่อเปิดข้อมูลสำหรับผู้ดูแล">
     <span class="dot pulse" id="syncDot"></span>
-    <span id="syncText">V3.2 · กำลังเชื่อมต่อ <span class="en">Google Sheet</span>…</span>
+    <span id="syncText"><span class="lang-pair"><span class="lang-th-text">กำลังอัปเดตข้อมูลคิว…</span><span class="lang-en-text en">Updating queue information…</span></span></span>
   </div>
 
   <!-- Cards -->
@@ -1218,11 +1527,21 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4" r="2"/><path d="M12 8v5l-3 7M12 13l3 7M9 12l3-3 3 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div>
-        <div class="walkin-th">สามารถจองคิวได้ที่ <span class="en">Front Reception</span></div>
+        <div class="walkin-th lang-pair lang-pair-block"><span class="lang-th-text">สามารถจองคิวได้ที่ Front Reception</span><span class="lang-en-text en">Please book your appointment at Front Reception</span></div>
       </div>
     </div>
   </div>
 
+</div>
+
+<div class="display-controls" aria-label="Display controls">
+  <button class="display-control language-indicator" id="languageControl" type="button" title="สลับภาษา / Switch language">TH</button>
+  <button class="display-control wake-indicator" id="wakeControl" type="button" title="ป้องกันหน้าจอดับ / Keep screen awake" aria-label="Keep screen awake">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v2M5.64 5.64l1.42 1.42M3 12h2M19 12h2M16.94 7.06l1.42-1.42" stroke-linecap="round"/><path d="M7 14a5 5 0 1 1 10 0v3H7v-3Z"/><path d="M5 21h14" stroke-linecap="round"/></svg>
+  </button>
+  <button class="display-control" id="fullscreenControl" type="button" title="เต็มหน้าจอ / Full screen" aria-label="Toggle full screen">
+    <svg id="fullscreenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
 </div>
 
 <script>
@@ -1230,18 +1549,58 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V4.7 Premium · Live Queue Fix",
+  BUILD: "V5.1 Stable",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
   SCHEDULE_GID: "1985324533",             // exact worksheet from the supplied link
   SETTINGS_TAB: "Settings",              // tab holding shop name / phone etc.
   REFRESH_MS: 15000,                     // how often to re-check the sheet (ms)
-  OPEN_HOUR: 12,                          // shop opens at 12:00
+  OPEN_HOUR: 14,                          // shop opens at 12:00
   QUEUE_START_HOUR: 14,                    // first queue displayed/bookable starts at 14:00
   CLOSE_HOUR: 23,
-  MIN_BOOKABLE_GAP_MIN: 60                // a free gap shorter than this won't be shown as "Available"
+  MIN_BOOKABLE_GAP_MIN: 60,               // a free gap shorter than this won't be shown as "Available"
+  STALE_WARN_MS: 120000,                 // warn after 2 minutes without a successful update
+  STALE_CRITICAL_MS: 600000,             // stronger warning after 10 minutes
+  PREPARE_ROOM_MIN: 10,                  // show room preparation message
+  IMMINENT_QUEUE_MIN: 15,                // rotating aura around the approaching queue
+  DAILY_RELOAD_HOUR: 11,
+  DAILY_RELOAD_MINUTE: 50,
+  LANGUAGE_SWITCH_MS: 12000
 };
+
+function languagePair(thHtml, enHtml, extraClass = ''){
+  return `<span class="lang-pair ${extraClass}"><span class="lang-th-text">${thHtml}</span><span class="lang-en-text en">${enHtml}</span></span>`;
+}
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function normalizeCustomerTypeLabel(value){
+  const raw = cleanCell(value);
+  const lower = raw.toLowerCase();
+  if (!raw) return { th: 'ไม่ระบุ', en: 'Not specified' };
+  if (lower.includes('walk')) return { th: 'Walk-in', en: 'Walk-in' };
+  if (raw.includes('โรงแรม') || lower.includes('hotel')) return { th: 'ลูกค้าโรงแรม', en: 'Hotel guest' };
+  return { th: raw, en: raw };
+}
+
+function customerInfoMarkup(customerName, course, customerType){
+  const safeName = escapeHtml(cleanCell(customerName) || 'ไม่ระบุ');
+  const safeCourse = escapeHtml(cleanCell(course) || 'ไม่ระบุ');
+  const type = normalizeCustomerTypeLabel(customerType);
+  return `<div class="customer-info">
+    <span class="customer-info-item customer-name">${languagePair(`ชื่อ: ${safeName}`, `Name: ${safeName}`)}</span>
+    <span class="customer-info-item customer-course">${languagePair(`คอร์ส: ${safeCourse}`, `Course: ${safeCourse}`)}</span>
+    <span class="customer-info-item customer-type">${languagePair(`ประเภท: ${escapeHtml(type.th)}`, `Type: ${escapeHtml(type.en)}`)}</span>
+  </div>`;
+}
 
 /* ---------------- Time helpers (minute precision) ---------------- */
 function minutesToLabel(mins){
@@ -1256,8 +1615,8 @@ function nowMinutes(){
 }
 
 function isShopOpenNow(){
-  const hour = new Date().getHours();
-  return hour >= CONFIG.OPEN_HOUR && hour <= CONFIG.CLOSE_HOUR;
+  const current = nowMinutes();
+  return current >= CONFIG.OPEN_HOUR * 60 && current < CONFIG.CLOSE_HOUR * 60;
 }
 
 /* ---------------- CSV fetch + parse ---------------- */
@@ -1267,7 +1626,7 @@ function sheetCsvUrl(tabName, gid = ''){
   const selector = gid
     ? `gid=${encodeURIComponent(gid)}`
     : `sheet=${encodeURIComponent(tabName)}`;
-  return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&${selector}&tq=${encodeURIComponent('select *')}&_=${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  return `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&${selector}&_=${Date.now()}`;
 }
 
 function cleanCell(value){
@@ -1290,6 +1649,9 @@ const HEADER_ALIASES = {
   timeslot: 'Time_Slot',
   status: 'Status',
   customernote: 'Customer_Note',
+  customername: 'Customer_Name',
+  ชื่อ: 'Customer_Name',
+  ชื่อลูกค้า: 'Customer_Name',
   id: 'ID',
   nameth: 'Name_TH',
   nameen: 'Name_EN',
@@ -1427,141 +1789,147 @@ function parseDurationMinutes(value){
   return Math.round(n * 60);
 }
 
-function buildScheduleMap(scheduleRows){
-  const byTherapist = {};
+function buildScheduleMap(rows){
+  const map = {};
+  const closeMin = CONFIG.CLOSE_HOUR * 60;
 
-  scheduleRows.forEach(r => {
-    // Positional fallback: A=ID, B=time, C=status, D=customer note,
-    // E=room, F=phone, G=course, H=hours, I=price,
-    // J=customer type, K=remark, L=actual start, M=actual end, N=salesperson.
-    const id = normalizeTherapistId(fieldByNameOrPosition(r, 'Therapist_ID', 0));
-    if (!id) return;
+  (rows || []).forEach((r, rowIndex) => {
+    try{
+      const therapistRaw = fieldByNameOrPosition(r, 'Therapist_ID', 0);
+      const therapistId = String(therapistRaw ?? '').trim();
+      if (!therapistId) return;
 
-    const slotMin = parseExactTime(fieldByNameOrPosition(r, 'Time_Slot', 1));
-    if (slotMin === null) return;
+      const status = fieldByNameOrPosition(r, 'Status', 2);
+      if (!isBusyStatus(status)) return;
 
-    const note = cleanCell(fieldByNameOrPosition(r, 'Customer_Note', 3));
-    const room = cleanCell(fieldByNameOrPosition(r, 'ห้อง', 4));
-    const phone = cleanCell(fieldByNameOrPosition(r, 'เบอร์โทร', 5));
-    const course = cleanCell(fieldByNameOrPosition(r, 'คอร์สการนวด', 6));
-    const durationRaw = cleanCell(fieldByNameOrPosition(r, 'ชั่วโมง', 7));
-    const price = cleanCell(fieldByNameOrPosition(r, 'ราคา', 8));
-    const customerType = cleanCell(fieldByNameOrPosition(r, 'ประเภทลูกค้า', 9));
-    const remark = cleanCell(fieldByNameOrPosition(r, 'หมายเหตุ', 10));
-    const actualStart = parseExactTime(fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11));
-    const actualEnd = parseExactTime(fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12));
-    const salesperson = cleanCell(fieldByNameOrPosition(r, 'พนักงานขาย', 13));
-    const durationMin = parseDurationMinutes(durationRaw);
-    const busy = isBusyStatus(fieldByNameOrPosition(r, 'Status', 2));
+      // Prefer explicit actual booking times (L:M in the user's sheet) when available.
+      const startRaw =
+        fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11) ||
+        fieldByNameOrPosition(r, 'เวลาเริ่มจอง', 11) ||
+        fieldByNameOrPosition(r, 'Start', 11) ||
+        fieldByNameOrPosition(r, 'Start_Time', 11) ||
+        fieldByNameOrPosition(r, 'Time_Slot', 1);
 
-    if (!byTherapist[id]) byTherapist[id] = [];
-    byTherapist[id].push({
-      slotMin, busy, note, room, phone, course, durationRaw, durationMin,
-      price, customerType, remark, actualStart, actualEnd, salesperson,
-      hasOwnBookingData: Boolean(
-        note || room || phone || course || durationRaw || price ||
-        customerType || remark || salesperson ||
-        actualStart !== null || actualEnd !== null
-      )
-    });
+      const endRaw =
+        fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12) ||
+        fieldByNameOrPosition(r, 'เวลาสิ้นสุดจอง', 12) ||
+        fieldByNameOrPosition(r, 'End', 12) ||
+        fieldByNameOrPosition(r, 'End_Time', 12);
+
+      let start = parseTimeToMinutes(startRaw);
+      let end = parseTimeToMinutes(endRaw);
+
+      // Fallback end time: derive from duration or the next hour only when explicit end is absent.
+      if (!Number.isFinite(start)) return;
+
+      const hoursRaw =
+        fieldByNameOrPosition(r, 'ชั่วโมง', 7) ||
+        fieldByNameOrPosition(r, 'Hours', 7) ||
+        fieldByNameOrPosition(r, 'Duration', 7);
+
+      const durationHours = parseFloat(String(hoursRaw ?? '').replace(',', '.'));
+      if (!Number.isFinite(end)){
+        if (Number.isFinite(durationHours) && durationHours > 0){
+          end = start + Math.round(durationHours * 60);
+        } else {
+          end = start + 60;
+        }
+      }
+
+      // Self-test / guard rails:
+      // 1) reject impossible or zero-length bookings
+      if (!Number.isFinite(end) || end <= start){
+        console.warn('[Spa Queue Self-test] invalid end<=start', {rowIndex, therapistId, startRaw, endRaw, start, end});
+        return;
+      }
+      // 2) never let a booking create availability beyond exact closing time.
+      if (start >= closeMin){
+        console.warn('[Spa Queue Self-test] booking starts at/after closing; ignored on public board', {rowIndex, therapistId, start, end});
+        return;
+      }
+      end = Math.min(end, closeMin);
+
+      const customer =
+        fieldByNameOrPosition(r, 'Customer_Note', 3) ||
+        fieldByNameOrPosition(r, 'Customer_Name', 3) ||
+        fieldByNameOrPosition(r, 'ชื่อลูกค้า', 3) || '';
+
+      const course =
+        fieldByNameOrPosition(r, 'คอร์สการนวด', 6) ||
+        fieldByNameOrPosition(r, 'Course', 6) ||
+        fieldByNameOrPosition(r, 'Treatment', 6) || '';
+
+      const customerType =
+        fieldByNameOrPosition(r, 'ประเภทลูกค้า', 9) ||
+        fieldByNameOrPosition(r, 'Customer_Type', 9) || '';
+
+      // Keep staff-only data private on the TV:
+      // phone, price, salesperson, internal remarks are intentionally NOT exposed here.
+      const room =
+        fieldByNameOrPosition(r, 'ห้อง', 4) ||
+        fieldByNameOrPosition(r, 'Room', 4) || '';
+
+      const displayParts = [];
+      if (customer) displayParts.push(String(customer).trim());
+      if (room) displayParts.push(`ห้อง ${String(room).trim()}`);
+      if (course) displayParts.push(String(course).trim());
+      if (customerType) displayParts.push(String(customerType).trim());
+
+      const item = {
+        therapistId,
+        start,
+        end,
+        customer: String(customer || '').trim(),
+        room: String(room || '').trim(),
+        course: String(course || '').trim(),
+        customerType: String(customerType || '').trim(),
+        note: displayParts.filter(Boolean).join(' · '),
+        rowIndex
+      };
+
+      if (!map[therapistId]) map[therapistId] = [];
+      map[therapistId].push(item);
+    } catch (err){
+      console.warn('[Spa Queue Self-test] row parse error', rowIndex, err);
+    }
   });
 
-  const map = {};
+  Object.keys(map).forEach(id => {
+    const list = map[id].sort((a,b) => a.start - b.start || a.end - b.end);
 
-  Object.keys(byTherapist).forEach(id => {
-    const rows = byTherapist[id].sort((a, b) => a.slotMin - b.slotMin);
-    const bookings = [];
-    let previousBusySlot = null;
+    // Merge overlapping/adjacent rows belonging to the same real booking period,
+    // while preserving the richest display data.
+    const merged = [];
+    for (const item of list){
+      const prev = merged[merged.length - 1];
+      if (prev && item.start <= prev.end){
+        prev.end = Math.max(prev.end, item.end);
+        if (!prev.customer && item.customer) prev.customer = item.customer;
+        if (!prev.room && item.room) prev.room = item.room;
+        if (!prev.course && item.course) prev.course = item.course;
+        if (!prev.customerType && item.customerType) prev.customerType = item.customerType;
 
-    rows.forEach(row => {
-      if (!row.busy){
-        previousBusySlot = null;
-        return;
+        const parts = [];
+        if (prev.customer) parts.push(prev.customer);
+        if (prev.room) parts.push(`ห้อง ${prev.room}`);
+        if (prev.course) parts.push(prev.course);
+        if (prev.customerType) parts.push(prev.customerType);
+        prev.note = parts.join(' · ');
+      } else {
+        merged.push({...item});
       }
-
-      const isBlankContinuation = !row.hasOwnBookingData;
-      const previous = bookings.length ? bookings[bookings.length - 1] : null;
-      const contiguous = previousBusySlot !== null && row.slotMin === previousBusySlot + 60;
-
-      // Blank red rows in the hourly grid are continuation markers. They should never
-      // create a phantom new booking. They only extend a booking whose end was inferred
-      // from the hourly grid; an exact end time/duration must always win.
-      if (isBlankContinuation && previous && contiguous){
-        if (!previous.endLocked){
-          previous.endMin = Math.max(previous.endMin, row.slotMin + 60);
-          previous.endLabel = minutesToLabel(previous.endMin);
-        }
-        previousBusySlot = row.slotMin;
-        return;
-      }
-
-      // Every non-blank busy row is treated as a real booking immediately. This is
-      // deliberately simpler and safer than relying on a later block merge, and fixes
-      // live queues such as 19:00-20:30 being shown as Available at 19:26.
-      const startMin = row.actualStart !== null ? row.actualStart : row.slotMin;
-      let endMin = row.actualEnd !== null
-        ? row.actualEnd
-        : (row.durationMin ? startMin + row.durationMin : row.slotMin + 60);
-
-      if (!Number.isFinite(endMin) || endMin <= startMin){
-        endMin = row.durationMin ? startMin + row.durationMin : row.slotMin + 60;
-      }
-
-      const noteParts = [];
-      if (row.room) noteParts.push(`ห้อง ${row.room}`);
-      if (row.note) noteParts.push(row.note);
-      if (row.course) noteParts.push(row.course);
-      if (row.customerType) noteParts.push(row.customerType);
-      if (row.remark) noteParts.push(row.remark);
-
-      bookings.push({
-        startMin,
-        endMin,
-        startLabel: minutesToLabel(startMin),
-        endLabel: minutesToLabel(endMin),
-        note: noteParts.join(' · '),
-        endLocked: row.actualEnd !== null || Boolean(row.durationMin)
-      });
-
-      previousBusySlot = row.slotMin;
-    });
-
-    // Drop exact duplicates, but keep genuinely separate bookings.
-    const deduped = [];
-    for (const b of bookings.sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin)){
-      const last = deduped[deduped.length - 1];
-      if (last && last.startMin === b.startMin && last.endMin === b.endMin && last.note === b.note) continue;
-      deduped.push(b);
     }
-
-    map[id] = deduped.map(({endLocked, ...booking}) => booking);
+    map[id] = merged;
   });
 
   return map;
 }
 
-// Small built-in regression check for the bug reported on 18 Aug 2026.
-// It does not affect the UI; it only logs an error in DevTools if the logic regresses.
-(function spaQueueRegressionCheck(){
-  try{
-    const sample = [
-      {Therapist_ID:'2', Time_Slot:'19:00', Status:'ไม่ว่าง', Customer_Note:'คุณชนิดา', 'คอร์สการนวด':'นวดน้ำมันอโรม่า', 'ชั่วโมง':'1.5', 'เวลาเริ่มจริง':'19:00', 'เวลาสิ้นสุดจริง':'20:30'},
-      {Therapist_ID:'2', Time_Slot:'20:00', Status:'ไม่ว่าง'}
-    ];
-    const booking = (buildScheduleMap(sample)['2'] || [])[0];
-    if (!booking || booking.startMin !== 19*60 || booking.endMin !== 20*60+30){
-      console.error('[Spa Queue Regression] Expected therapist 2 booking 19:00-20:30, got:', booking);
-    }
-  } catch (err){
-    console.error('[Spa Queue Regression] self-test failed:', err);
-  }
-})();
-
 // Merge identity (Queue) with computed live status (Schedule) for one therapist
 function computeTherapistView(therapistId, bookings){
   bookings = bookings || [];
   const nowMin = nowMinutes();
-  const closeMin = CONFIG.CLOSE_HOUR * 60 + 60; // end of the last operating hour (e.g. 23:00 hour -> closes 24:00)
+  const closeMin = CONFIG.CLOSE_HOUR * 60; // exact closing time; 23:00 means closed from 23:00 onward
 
   const currentBooking = bookings.find(b => nowMin >= b.startMin && nowMin < b.endMin);
   const queueStartMin = CONFIG.QUEUE_START_HOUR * 60;
@@ -1598,7 +1966,15 @@ function computeTherapistView(therapistId, bookings){
     if (b.startMin > cursor && (b.startMin - cursor) >= CONFIG.MIN_BOOKABLE_GAP_MIN){
       segments.push({ type: 'available', startMin: cursor, endMin: b.startMin });
     }
-    segments.push({ type: 'busy', startMin: b.startMin, endMin: b.endMin, note: b.note });
+    segments.push({
+      type: 'busy',
+      startMin: b.startMin,
+      endMin: b.endMin,
+      note: b.note,
+      customerName: b.customerName || '',
+      course: b.course || '',
+      customerType: b.customerType || ''
+    });
     cursor = b.endMin;
   });
   if (cursor < closeMin && (closeMin - cursor) >= CONFIG.MIN_BOOKABLE_GAP_MIN){
@@ -1661,14 +2037,22 @@ function computeTherapistView(therapistId, bookings){
 
   const nextThree = visibleSegments.map(s => s.type === 'none' ? s : ({
     type: s.type,
+    startMin: s.startMin,
+    endMin: Math.min(s.endMin, closeMin),
     startLabel: minutesToLabel(s.startMin),
     endLabel: minutesToLabel(Math.min(s.endMin, closeMin)),
-    note: s.note || ''
+    note: s.note || '',
+    customerName: s.customerName || '',
+    course: s.course || '',
+    customerType: s.customerType || ''
   }));
 
   return {
     available: !currentBooking,
     currentNote: currentBooking ? currentBooking.note : '',
+    currentCustomerName: currentBooking ? (currentBooking.customerName || '') : '',
+    currentCourse: currentBooking ? (currentBooking.course || '') : '',
+    currentCustomerType: currentBooking ? (currentBooking.customerType || '') : '',
     currentStartMin: currentBooking ? currentBooking.startMin : null,
     currentEndMin: currentBooking ? currentBooking.endMin : null,
     currentEndLabel: currentBooking ? currentBooking.endLabel : '',
@@ -1711,11 +2095,12 @@ let hasRenderedOnce = false;
 function renderCards(queueList, scheduleMap){
   const grid = document.getElementById('cardGrid');
   if (!queueList.length){
-    grid.innerHTML = `<div class="empty-state">ยังไม่มีข้อมูลหมอนวดในชีต — โปรดเพิ่มแถวข้อมูลในแท็บ "${CONFIG.QUEUE_TAB}"</div>`;
+    grid.innerHTML = `<div class="empty-state">${languagePair('ยังไม่มีข้อมูลหมอนวดในชีต','No therapist information is available')}</div>`;
     return;
   }
 
   const isFirstRender = !hasRenderedOnce;
+  const currentMinute = nowMinutes();
 
   grid.innerHTML = queueList.map((t, cardIndex) => {
     const id = normalizeTherapistId(t.ID || t.Therapist_ID || fieldByNameOrPosition(t, 'ID', 0));
@@ -1725,17 +2110,20 @@ function renderCards(queueList, scheduleMap){
       ? `<img src="${t.Photo_URL}" alt="${nameTh}">`
       : avatarSvg();
 
-    const workingRaw = (t.Working_Today || 'ทำงาน').trim().toLowerCase();
-    const isOff = workingRaw === 'ไม่ทำงาน' || workingRaw === 'off' || workingRaw === 'no';
-
-    // Detect a real status change since the last successful render (skipped on first load)
-    const currentStatusKey = isOff ? 'off' : null; // filled in below once availability is known
+    const workingOriginal = cleanCell(t.Working_Today || 'ทำงาน');
+    const workingRaw = workingOriginal.toLowerCase();
+    const offExactTokens = ['ไม่ทำงาน','วันหยุด','หยุด','ลา','ลางาน','ไม่เข้าทำงาน','ไม่เข้า','off','no','leave','day off'];
+    const offContainsTokens = ['ไม่ทำงาน','วันหยุด','ลางาน','ไม่เข้าทำงาน','ไม่เข้าวันนี้','หยุดวันนี้','day off'];
+    const isOff = offExactTokens.includes(workingRaw) || offContainsTokens.some(token => workingRaw.includes(token));
     const enterStyle = isFirstRender ? ` style="animation-delay:${cardIndex * 90}ms"` : '';
 
-    // ---- Therapist not working today: short-circuit to a dedicated card ----
+    // ---- Therapist not working today: make the day-off state highly visible. ----
     if (isOff){
       const changed = !isFirstRender && previousStatusMap[id] !== undefined && previousStatusMap[id] !== 'off';
       previousStatusMap[id] = 'off';
+      const reason = workingOriginal && !['ไม่ทำงาน','off','no'].includes(workingRaw)
+        ? workingOriginal
+        : 'วันหยุด';
       return `
       <div class="card card-off state-off${isFirstRender ? ' card-enter' : ''}${changed ? ' status-flash' : ''}" data-therapist="${id}" data-state="off"${enterStyle}>
         <div class="card-top">
@@ -1746,18 +2134,18 @@ function renderCards(queueList, scheduleMap){
           </div>
           <div class="pill off">
             <span class="pill-dot"></span>
-            Day Off
+            ${languagePair('วันหยุด','Day Off')}
           </div>
         </div>
         <div class="card-body day-off-body">
           <div class="day-off-icon${changed ? ' icon-flash' : ''}">${statusIconSvg('off')}</div>
-          <div class="day-off-text en">Day Off</div>
-          <div class="day-off-sub">ไม่รับคิวในวันนี้ · <span class="en">Not accepting bookings today</span></div>
+          <div class="day-off-text">${languagePair('ไม่เข้าทำงานวันนี้','Day Off','lang-pair-block')}</div>
+          <div class="day-off-sub">${languagePair(`${reason} · ไม่รับคิวในวันนี้`,'Not accepting bookings today','lang-pair-block')}</div>
         </div>
       </div>`;
     }
 
-    // ---- Outside operating hours: whole shop is closed right now ----
+    // ---- Outside operating hours: whole shop is closed right now. ----
     if (!isShopOpenNow()){
       const changed = !isFirstRender && previousStatusMap[id] !== undefined && previousStatusMap[id] !== 'closed';
       previousStatusMap[id] = 'closed';
@@ -1772,83 +2160,88 @@ function renderCards(queueList, scheduleMap){
           </div>
           <div class="pill off">
             <span class="pill-dot"></span>
-            Closed
+            ${languagePair('ปิดบริการ','Closed')}
           </div>
         </div>
         <div class="card-body day-off-body">
           <div class="day-off-icon${changed ? ' icon-flash' : ''}">${statusIconSvg('off')}</div>
-          <div class="day-off-text en">Closed</div>
-          <div class="day-off-sub">ปิดให้บริการแล้ว · เปิดอีกครั้ง <span class="en">${openHourLabel}</span> น. · <span class="en">Opens again at ${openHourLabel}</span></div>
+          <div class="day-off-text">${languagePair('ปิดให้บริการ','Closed','lang-pair-block')}</div>
+          <div class="day-off-sub">${languagePair(`เปิดอีกครั้งเวลา ${openHourLabel} น.`,`Opens again at ${openHourLabel}`,'lang-pair-block')}</div>
         </div>
       </div>`;
     }
 
     const view = computeTherapistView(id, scheduleMap[id]);
     const available = view.available;
-    const nowLabel = minutesToLabel(nowMinutes());
+    const nowLabel = minutesToLabel(currentMinute);
     const statusKey = available ? 'available' : 'busy';
     const changed = !isFirstRender && previousStatusMap[id] !== undefined && previousStatusMap[id] !== statusKey;
     previousStatusMap[id] = statusKey;
-    const isLastHour = nowMinutes() >= CONFIG.CLOSE_HOUR * 60;
+    const isLastHour = currentMinute >= (CONFIG.CLOSE_HOUR - 1) * 60 && currentMinute < CONFIG.CLOSE_HOUR * 60;
 
     const nextBox = view.nextThree
       .map((s, i) => {
-          if (s.type === 'none'){
-            return `<div class="next-box next-box-empty is-none${i === 0 ? ' next-box-first' : ' next-box-later'}${isFirstRender ? ' slot-enter' : ''}" style="--slot-delay:${i * 90}ms;animation-delay:${i * 90}ms">
-                <div class="next-box-icon">${calendarSvg()}</div>
-                <div>
-                  <div class="next-th no-more">ยังไม่มีคิวจองเพิ่มเติมวันนี้ · <span class="en">No more bookings today</span></div>
-                  <div class="closing-note"><span class="closing-note-dot"></span>Final queue · Closing soon</div>
-                </div>
-              </div>`;
-          }
-          const isBusy = s.type === 'busy';
-          const label = isBusy
-            ? (s.note || 'ไม่ว่าง')
-            : `<span class="en">Available</span>`;
-          const cls = isBusy ? 'next-th booked' : 'next-th avail';
-          const subLabel = isBusy
-            ? (i === 0 ? 'Next booking' : 'Upcoming')
-            : (i === 0 ? 'Open now' : 'Open');
-          return `<div class="next-box ${isBusy ? 'is-booked' : 'is-available'}${i === 0 ? ' next-box-first' : ' next-box-later'}${isBusy ? '' : ' next-box-empty'}${isFirstRender ? ' slot-enter' : ''}" style="animation-delay:${i * 90}ms">
+        if (s.type === 'none'){
+          return `<div class="next-box next-box-empty is-none${i === 0 ? ' next-box-first' : ' next-box-later'}${isFirstRender ? ' slot-enter' : ''}" style="--slot-delay:${i * 90}ms;animation-delay:${i * 90}ms">
               <div class="next-box-icon">${calendarSvg()}</div>
               <div>
-                <div class="${cls}"><span class="en">${s.startLabel}-${s.endLabel}</span> · ${label}</div>
-                <div class="next-en">${subLabel}</div>
+                <div class="next-th no-more">${languagePair('ยังไม่มีคิวจองเพิ่มเติมวันนี้','No more bookings today')}</div>
+                <div class="closing-note"><span class="closing-note-dot"></span>${languagePair('คิวสุดท้าย · ใกล้ปิดร้าน','Final queue · Closing soon')}</div>
               </div>
             </div>`;
-        }).join('');
+        }
+
+        const isBusy = s.type === 'busy';
+        const startsIn = Number.isFinite(s.startMin) ? s.startMin - currentMinute : Infinity;
+        const imminent = isBusy && startsIn > 0 && startsIn <= CONFIG.IMMINENT_QUEUE_MIN;
+        const label = isBusy ? languagePair('มีคิวจองแล้ว','Booked') : languagePair('ว่าง','Available');
+        const cls = isBusy ? 'next-th booked' : 'next-th avail';
+        const subLabel = isBusy
+          ? (i === 0 ? languagePair('คิวถัดไป','Next booking') : languagePair('คิวลำดับต่อไป','Upcoming booking'))
+          : (i === 0 ? languagePair('ว่างตอนนี้','Open now') : languagePair('ช่วงเวลาว่าง','Open'));
+        const customerInfo = isBusy ? customerInfoMarkup(s.customerName, s.course, s.customerType) : '';
+
+        return `<div class="next-box ${isBusy ? 'is-booked' : 'is-available'}${i === 0 ? ' next-box-first' : ' next-box-later'}${isBusy ? '' : ' next-box-empty'}${imminent ? ' queue-imminent' : ''}${isFirstRender ? ' slot-enter' : ''}" data-queue-type="${s.type}" data-start="${s.startMin}" data-end="${s.endMin}" style="animation-delay:${i * 90}ms">
+            <div class="next-box-icon">${calendarSvg()}</div>
+            <div>
+              <div class="${cls}"><span class="en">${s.startLabel}-${s.endLabel}</span> · ${label}</div>
+              ${customerInfo}
+              <div class="next-en">${subLabel}</div>
+              ${isBusy ? `<div class="queue-prep-note">${languagePair('คิวถัดไปกำลังเตรียมห้อง','Preparing the room for the next booking')}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
 
     let progressMarkup = '';
     if (!available && view.currentStartMin !== null && view.currentEndMin !== null){
       progressMarkup = `<div class="session-progress" data-kind="busy" data-start="${view.currentStartMin}" data-end="${view.currentEndMin}">
           <div class="session-progress-meta">
-            <span class="session-progress-title">ความคืบหน้าคิว · <span class="en">Session progress</span></span>
-            <span class="session-remaining">กำลังคำนวณ…</span>
+            <span class="session-progress-title">${languagePair('ความคืบหน้าคิว','Session progress')}</span>
+            <span class="session-remaining">${languagePair('กำลังคำนวณ…','Calculating…')}</span>
           </div>
           <div class="session-progress-track"><span class="session-progress-bar"></span></div>
+          <div class="room-prep-message">${languagePair('คิวถัดไปกำลังเตรียมห้อง','The next room is being prepared')}</div>
         </div>`;
     } else if (available && view.availableStartMin !== null && view.availableEndMin !== null){
       progressMarkup = `<div class="session-progress available-progress" data-kind="available" data-start="${view.availableStartMin}" data-end="${view.availableEndMin}" data-end-label="${view.availableEndLabel}" data-closing="${view.availableEndsAtClosing ? 'true' : 'false'}">
           <div class="session-progress-meta">
-            <span class="session-progress-title">เวลาว่างคงเหลือ · <span class="en">Available time left</span></span>
-            <span class="session-remaining">กำลังคำนวณ…</span>
+            <span class="session-progress-title">${languagePair('เวลาว่างคงเหลือ','Available time left')}</span>
+            <span class="session-remaining">${languagePair('กำลังคำนวณ…','Calculating…')}</span>
           </div>
           <div class="session-progress-track"><span class="session-progress-bar"></span></div>
         </div>`;
     }
 
-    const beforeQueueStart = nowMinutes() < CONFIG.QUEUE_START_HOUR * 60;
+    const beforeQueueStart = currentMinute < CONFIG.QUEUE_START_HOUR * 60;
     const queueStartLabel = String(CONFIG.QUEUE_START_HOUR).padStart(2, '0') + ':00';
     const hint = available
       ? (beforeQueueStart
-          ? `เริ่มรับคิวเวลา <span class="en">${queueStartLabel}</span> น. · <span class="en">Queue starts at ${queueStartLabel}</span>`
+          ? languagePair(`เริ่มรับคิวเวลา ${queueStartLabel} น.`,`Queue starts at ${queueStartLabel}`)
           : (isLastHour
-              ? `กำลังอยู่ให้บริการคิวสุดท้าย · <span class="en">Last service today</span>`
-              : `พร้อมรับลูกค้าทันที · <span class="en">Ready for walk-in</span>`))
-      : (view.currentNote
-          ? `${view.currentNote} · ถึง <span class="en">${view.currentEndLabel}</span> น.`
-          : `กำลังให้บริการ · <span class="en">Currently in session</span>`);
+              ? languagePair('กำลังอยู่ในช่วงคิวสุดท้ายของวันนี้','Last service period today')
+              : languagePair('พร้อมรับลูกค้าทันที','Ready for walk-in')))
+      : `${customerInfoMarkup(view.currentCustomerName, view.currentCourse, view.currentCustomerType)}
+         <div class="current-until">${languagePair(`ให้บริการถึง ${view.currentEndLabel} น.`,`In service until ${view.currentEndLabel}`)}</div>`;
 
     return `
     <div class="card state-${statusKey}${isFirstRender ? ' card-enter' : ''}${changed ? ' status-flash' : ''}" data-therapist="${id}" data-state="${statusKey}"${enterStyle}>
@@ -1860,19 +2253,20 @@ function renderCards(queueList, scheduleMap){
         </div>
         <div class="pill ${available ? 'available' : 'busy'}">
           <span class="pill-dot"></span>
-          ${available ? 'ว่าง · <span class="en">Available</span>' : 'ไม่ว่าง · <span class="en">Busy</span>'}
+          ${available ? languagePair('ว่าง','Available') : languagePair('ไม่ว่าง','Busy')}
         </div>
       </div>
-      <div class="card-body">        <div class="status-row">
+      <div class="card-body">
+        <div class="status-row">
           <div class="status-icon ${available ? 'avail-icon' : 'busy-icon'}${changed ? ' icon-flash' : ''}">${statusIconSvg(available ? 'available' : 'busy')}</div>
           <div>
-            <div class="status-label">คิวปัจจุบัน / <span class="en">Current status</span> (${nowLabel} น.)</div>
-            <div class="status-value ${available ? 'available' : 'busy'}">${available ? 'ว่าง <span class="en">Available</span>' : 'ไม่ว่าง <span class="en">Busy</span>'}</div>
+            <div class="status-label">${languagePair(`คิวปัจจุบัน (${nowLabel} น.)`,`Current status (${nowLabel})`)}</div>
+            <div class="status-value ${available ? 'available' : 'busy'}">${available ? languagePair('ว่าง','Available') : languagePair('ไม่ว่าง','Busy')}</div>
             <div class="status-hint${available ? '' : ' busy'}">${hint}</div>
           </div>
         </div>
         ${progressMarkup}
-        <div class="next-label"><span class="rule"></span>คิวถัดไป / <span class="en">Next booking</span><span class="rule"></span></div>
+        <div class="next-label"><span class="rule"></span>${languagePair('คิวถัดไป','Next booking')}<span class="rule"></span></div>
         ${nextBox}
       </div>
     </div>`;
@@ -1888,6 +2282,7 @@ function applySettings(settingsRows){
   if (map.ShopName_TH) document.getElementById('shopNameTh').textContent = map.ShopName_TH;
   if (map.ShopName_EN) document.getElementById('shopNameEn').textContent = map.ShopName_EN;
   if (map.Tagline_TH) document.getElementById('taglineTh').textContent = map.Tagline_TH;
+  if (map.Tagline_EN && document.getElementById('taglineEn')) document.getElementById('taglineEn').textContent = map.Tagline_EN;
 }
 
 /* ---------------- Sync loop ---------------- */
@@ -1915,10 +2310,109 @@ async function fetchScheduleRows(){
 
 let lastGoodQueue = null;
 let lastGoodScheduleMap = null;
+let lastSuccessfulSyncAt = 0;
+let consecutiveSyncFailures = 0;
+let lastSyncError = null;
+let lastSyncStats = null;
+let syncInFlight = false;
+let recoveryReloadScheduled = false;
+let adminDebugMode = false;
+let debugTapTimes = [];
 
-async function syncNow(){
+function formatSyncTime(timestamp, includeSeconds = false){
+  if (!timestamp) return '--:--';
+  return new Date(timestamp).toLocaleTimeString('th-TH', {
+    hour:'2-digit', minute:'2-digit', ...(includeSeconds ? {second:'2-digit'} : {})
+  });
+}
+
+function setSyncLevel(level){
+  const strip = document.getElementById('syncStrip');
   const dot = document.getElementById('syncDot');
+  if (!strip || !dot) return;
+  strip.classList.remove('status-warn','status-critical','status-offline');
+  dot.classList.remove('warn','critical');
+  if (level === 'warn'){
+    strip.classList.add('status-warn');
+    dot.classList.add('warn');
+  } else if (level === 'critical'){
+    strip.classList.add('status-critical');
+    dot.classList.add('critical');
+  } else if (level === 'offline'){
+    strip.classList.add('status-offline');
+    dot.classList.add('critical');
+  }
+}
+
+function updateSyncStatus(){
   const text = document.getElementById('syncText');
+  const strip = document.getElementById('syncStrip');
+  if (!text || !strip) return;
+  strip.classList.toggle('debug-active', adminDebugMode);
+
+  const now = Date.now();
+  const age = lastSuccessfulSyncAt ? now - lastSuccessfulSyncAt : Infinity;
+  let level = 'ok';
+  let th = 'กำลังอัปเดตข้อมูลคิว…';
+  let en = 'Updating queue information…';
+
+  if (!navigator.onLine){
+    level = 'offline';
+    th = lastSuccessfulSyncAt
+      ? `อินเทอร์เน็ตขัดข้อง · แสดงข้อมูลล่าสุดเมื่อ ${formatSyncTime(lastSuccessfulSyncAt)}`
+      : 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต · กรุณาตรวจสอบที่ Front Reception';
+    en = lastSuccessfulSyncAt
+      ? `Internet offline · Showing the last update from ${formatSyncTime(lastSuccessfulSyncAt)}`
+      : 'No internet connection · Please check with Front Reception';
+  } else if (!lastSuccessfulSyncAt){
+    level = consecutiveSyncFailures ? 'critical' : 'ok';
+    th = consecutiveSyncFailures
+      ? 'ยังดึงข้อมูลคิวไม่ได้ · กรุณาตรวจสอบที่ Front Reception'
+      : 'กำลังเชื่อมต่อข้อมูลคิว…';
+    en = consecutiveSyncFailures
+      ? 'Queue data is unavailable · Please check with Front Reception'
+      : 'Connecting to queue data…';
+  } else if (age >= CONFIG.STALE_CRITICAL_MS){
+    level = 'critical';
+    th = `ข้อมูลคิวอาจไม่เป็นปัจจุบัน · ล่าสุด ${formatSyncTime(lastSuccessfulSyncAt)} · กรุณาตรวจสอบที่ Front Reception`;
+    en = `Queue data may be outdated · Last update ${formatSyncTime(lastSuccessfulSyncAt)} · Please check with Front Reception`;
+  } else if (consecutiveSyncFailures > 0){
+    level = 'warn';
+    th = `กำลังเชื่อมต่อใหม่ · ยังแสดงข้อมูลล่าสุดเมื่อ ${formatSyncTime(lastSuccessfulSyncAt)}`;
+    en = `Reconnecting · Still showing the last update from ${formatSyncTime(lastSuccessfulSyncAt)}`;
+  } else if (age >= CONFIG.STALE_WARN_MS){
+    level = 'warn';
+    th = `กำลังรอข้อมูลใหม่ · อัปเดตล่าสุด ${formatSyncTime(lastSuccessfulSyncAt)}`;
+    en = `Waiting for a fresh update · Last updated ${formatSyncTime(lastSuccessfulSyncAt)}`;
+  } else {
+    th = `ข้อมูลคิวอัปเดตแล้ว · ล่าสุด ${formatSyncTime(lastSuccessfulSyncAt)}`;
+    en = `Queue information is up to date · Updated ${formatSyncTime(lastSuccessfulSyncAt)}`;
+  }
+
+  if (adminDebugMode && lastSyncStats){
+    th += ` · ${CONFIG.BUILD} · แถว ${lastSyncStats.rows} · ไม่ว่าง ${lastSyncStats.busyRows} · คิว ${lastSyncStats.bookings} · ล้มเหลว ${consecutiveSyncFailures}`;
+    en += ` · ${CONFIG.BUILD} · Rows ${lastSyncStats.rows} · Busy ${lastSyncStats.busyRows} · Bookings ${lastSyncStats.bookings} · Failures ${consecutiveSyncFailures}`;
+  }
+
+  setSyncLevel(level);
+  text.innerHTML = languagePair(th, en);
+}
+
+function scheduleRecoveryReload(){
+  if (recoveryReloadScheduled || !navigator.onLine || consecutiveSyncFailures < 8) return;
+  const match = /#recovery-(\d+)/.exec(location.hash);
+  const previousRecovery = match ? Number(match[1]) : 0;
+  if (previousRecovery && Date.now() - previousRecovery < 30 * 60 * 1000) return;
+  recoveryReloadScheduled = true;
+  window.setTimeout(() => {
+    const cleanUrl = location.href.replace(/#recovery-\d+$/, '').split('#')[0];
+    location.replace(`${cleanUrl}#recovery-${Date.now()}`);
+  }, 5000);
+}
+
+async function syncNow(reason = 'interval'){
+  if (syncInFlight) return;
+  syncInFlight = true;
   try{
     const [queue, scheduleRows, settings] = await Promise.all([
       fetchTab(CONFIG.QUEUE_TAB),
@@ -1926,28 +2420,55 @@ async function syncNow(){
       fetchTab(CONFIG.SETTINGS_TAB).catch(() => [])
     ]);
     const scheduleMap = buildScheduleMap(scheduleRows);
+    const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
+    const busyRowCount = scheduleRows.filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2))).length;
+
     lastGoodQueue = queue;
     lastGoodScheduleMap = scheduleMap;
+    lastSuccessfulSyncAt = Date.now();
+    setPublicSyncWarning('');
+    consecutiveSyncFailures = 0;
+    lastSyncError = null;
+    lastSyncStats = { rows:scheduleRows.length, busyRows:busyRowCount, bookings:bookingCount, reason };
+    recoveryReloadScheduled = false;
+
     renderCards(queue, scheduleMap);
     if (settings.length) applySettings(settings);
-    dot.classList.remove('warn');
     document.body.classList.remove('sync-success');
     void document.body.offsetWidth;
     document.body.classList.add('sync-success');
     window.setTimeout(() => document.body.classList.remove('sync-success'), 900);
-    const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
-    const busyRowCount = scheduleRows.filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2))).length;
-    text.textContent = `${CONFIG.BUILD} · เชื่อมต่อ Google Sheet แล้ว · อ่านตาราง ${scheduleRows.length} แถว · แถวไม่ว่าง ${busyRowCount} · คิว ${bookingCount} รายการ · อัปเดต ` + new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
     if (busyRowCount > 0 && bookingCount === 0){
-      dot.classList.add('warn');
-      text.textContent = `${CONFIG.BUILD} · พบแถวไม่ว่าง ${busyRowCount} แถว แต่แปลงเป็นคิวไม่ได้ — โปรดตรวจรูปแบบเวลา/หัวตาราง`;
+      consecutiveSyncFailures = 1;
+      lastSyncError = new Error('พบแถวไม่ว่าง แต่แปลงเป็นคิวไม่ได้');
     }
   } catch (err){
-    dot.classList.add('warn');
+    consecutiveSyncFailures += 1;
+    lastSyncError = err;
     console.error('[Spa Queue Sync Error]', err);
-    text.textContent = 'เชื่อมต่อ Google Sheet ไม่สำเร็จ: ' + err.message;
+    setPublicSyncWarning('ข้อมูลคิวอาจไม่เป็นปัจจุบัน กรุณาติดต่อ Front Reception');
     if (lastGoodQueue) renderCards(lastGoodQueue, lastGoodScheduleMap || {});
+    scheduleRecoveryReload();
+  } finally {
+    syncInFlight = false;
+    updateSyncStatus();
   }
+}
+
+function setupSyncDebugToggle(){
+  const strip = document.getElementById('syncStrip');
+  if (!strip) return;
+  strip.addEventListener('click', () => {
+    const now = Date.now();
+    debugTapTimes = debugTapTimes.filter(t => now - t < 3000);
+    debugTapTimes.push(now);
+    if (debugTapTimes.length >= 5){
+      adminDebugMode = !adminDebugMode;
+      debugTapTimes = [];
+      updateSyncStatus();
+    }
+  });
 }
 
 /* ---------------- Clock ---------------- */
@@ -1969,27 +2490,48 @@ function tickClock(){
 
 
 /* ---------------- Premium motion + live progress ---------------- */
-function formatRemainingMinutes(minutes){
+function remainingCopy(minutes){
   const safe = Math.max(0, Math.ceil(minutes));
-  if (safe <= 0) return 'ใกล้เสร็จแล้ว · Finishing soon';
-  if (safe < 60) return `เหลือ ${safe} นาที · ${safe} min left`;
+  if (safe <= 0) return { th:'ใกล้เสร็จแล้ว', en:'Finishing soon' };
+  if (safe <= 5) return { th:`เหลืออีก ${safe} นาที`, en:`Only ${safe} min left` };
+  if (safe < 60) return { th:`เหลือ ${safe} นาที`, en:`${safe} min left` };
   const h = Math.floor(safe / 60);
   const m = safe % 60;
-  return m ? `เหลือ ${h} ชม. ${m} นาที · ${h}h ${m}m left` : `เหลือ ${h} ชั่วโมง · ${h}h left`;
+  return m
+    ? { th:`เหลือ ${h} ชม. ${m} นาที`, en:`${h}h ${m}m left` }
+    : { th:`เหลือ ${h} ชั่วโมง`, en:`${h}h left` };
 }
 
-function formatAvailableMinutes(minutes, closing){
+function availableCopy(minutes, closing){
   const safe = Math.max(0, Math.ceil(minutes));
-  if (safe <= 0) return closing ? 'กำลังปิดร้าน · Closing now' : 'คิวถัดไปกำลังเริ่ม · Next booking starting';
-  let duration;
+  if (safe <= 0){
+    return closing
+      ? { th:'กำลังปิดร้าน', en:'Closing now' }
+      : { th:'คิวถัดไปกำลังเริ่ม', en:'Next booking starting' };
+  }
+  let thDuration;
+  let enDuration;
   if (safe < 60){
-    duration = `${safe} นาที · ${safe} min`;
+    thDuration = `${safe} นาที`;
+    enDuration = `${safe} min`;
   } else {
     const h = Math.floor(safe / 60);
     const m = safe % 60;
-    duration = m ? `${h} ชม. ${m} นาที · ${h}h ${m}m` : `${h} ชั่วโมง · ${h}h`;
+    thDuration = m ? `${h} ชม. ${m} นาที` : `${h} ชั่วโมง`;
+    enDuration = m ? `${h}h ${m}m` : `${h}h`;
   }
-  return closing ? `ว่างจนปิดร้าน เหลือ ${duration}` : `ว่างอีก ${duration}`;
+  return closing
+    ? { th:`ว่างจนปิดร้าน · เหลือ ${thDuration}`, en:`Available until closing · ${enDuration} left` }
+    : { th:`ว่างอีก ${thDuration}`, en:`Available for ${enDuration}` };
+}
+
+function updateUpcomingQueueEffects(){
+  const now = nowMinutes();
+  document.querySelectorAll('.next-box[data-queue-type="busy"]').forEach(box => {
+    const start = Number(box.dataset.start);
+    const startsIn = start - now;
+    box.classList.toggle('queue-imminent', Number.isFinite(start) && startsIn > 0 && startsIn <= CONFIG.IMMINENT_QUEUE_MIN);
+  });
 }
 
 function updateSessionProgress(){
@@ -2010,24 +2552,45 @@ function updateSessionProgress(){
       node.classList.toggle('is-ending', now >= start && minutesLeft <= 15);
 
       if (now < start){
-        const waitMin = start - now;
+        const waitMin = Math.max(0, start - now);
         if (bar) bar.style.width = '0%';
-        if (title) title.innerHTML = `เริ่มรับคิวเวลา ${minutesToLabel(start)} · <span class="en">Queue starts at ${minutesToLabel(start)}</span>`;
-        if (remaining) remaining.textContent = `อีก ${Math.ceil(waitMin)} นาที · ${Math.ceil(waitMin)} min`;
+        if (title) title.innerHTML = languagePair(`เริ่มรับคิวเวลา ${minutesToLabel(start)}`,`Queue starts at ${minutesToLabel(start)}`);
+        if (remaining) remaining.innerHTML = languagePair(`อีก ${Math.ceil(waitMin)} นาที`,`${Math.ceil(waitMin)} min`);
         return;
       }
 
       const remainingPercent = Math.min(100, Math.max(0, ((end - now) / (end - start)) * 100));
       if (bar) bar.style.width = `${remainingPercent.toFixed(1)}%`;
-      if (title) title.innerHTML = `เวลาว่างคงเหลือ · <span class="en">Available time left</span>`;
-      if (remaining) remaining.textContent = formatAvailableMinutes(end - now, node.dataset.closing === 'true');
+      if (title) title.innerHTML = languagePair('เวลาว่างคงเหลือ','Available time left');
+      if (remaining){
+        const copy = availableCopy(end - now, node.dataset.closing === 'true');
+        remaining.innerHTML = languagePair(copy.th, copy.en);
+      }
       return;
     }
 
+    const minutesLeft = end - now;
     const progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
     if (bar) bar.style.width = `${progress.toFixed(1)}%`;
-    if (remaining) remaining.textContent = formatRemainingMinutes(end - now);
+    if (remaining){
+      const copy = remainingCopy(minutesLeft);
+      remaining.innerHTML = languagePair(copy.th, copy.en);
+    }
+
+    const card = node.closest('.card');
+    const upcomingBusy = card
+      ? [...card.querySelectorAll('.next-box[data-queue-type="busy"]')]
+          .map(box => Number(box.dataset.start))
+          .filter(Number.isFinite)
+          .sort((a,b) => a-b)[0]
+      : null;
+    const nextStartsSoonAfter = Number.isFinite(upcomingBusy) && upcomingBusy >= end && upcomingBusy - end <= CONFIG.IMMINENT_QUEUE_MIN;
+    const preparing = minutesLeft > 0 && minutesLeft <= CONFIG.PREPARE_ROOM_MIN && nextStartsSoonAfter;
+    node.classList.toggle('is-preparing', preparing);
+    node.classList.toggle('is-final-minutes', minutesLeft > 0 && minutesLeft <= 5);
   });
+
+  updateUpcomingQueueEffects();
 }
 
 function updateAtmosphere(){
@@ -2101,17 +2664,211 @@ function enhanceRenderedCards(){
 }
 
 
+let activeLanguage = 'th';
+let languageCycleTimer = null;
+let wakeLockSentinel = null;
+let wakeLockDesired = true;
+let lastHeartbeatAt = Date.now();
+
+function setLanguageMode(language){
+  activeLanguage = language === 'en' ? 'en' : 'th';
+  document.body.classList.toggle('language-en', activeLanguage === 'en');
+  const control = document.getElementById('languageControl');
+  if (control) control.textContent = activeLanguage === 'en' ? 'EN' : 'TH';
+}
+
+function restartLanguageCycle(){
+  window.clearInterval(languageCycleTimer);
+  languageCycleTimer = window.setInterval(() => {
+    setLanguageMode(activeLanguage === 'th' ? 'en' : 'th');
+  }, CONFIG.LANGUAGE_SWITCH_MS);
+}
+
+function setupLanguageCycle(){
+  setLanguageMode('th');
+  restartLanguageCycle();
+  const control = document.getElementById('languageControl');
+  if (control){
+    control.addEventListener('click', () => {
+      setLanguageMode(activeLanguage === 'th' ? 'en' : 'th');
+      restartLanguageCycle();
+    });
+  }
+}
+
+function updateFullscreenControl(){
+  const button = document.getElementById('fullscreenControl');
+  const icon = document.getElementById('fullscreenIcon');
+  if (!button || !icon) return;
+  const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+  button.title = isFullscreen ? 'ออกจากโหมดเต็มหน้าจอ / Exit full screen' : 'เต็มหน้าจอ / Full screen';
+  icon.innerHTML = isFullscreen
+    ? '<path d="M9 9H4V4M15 9h5V4M9 15H4v5M15 15h5v5" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" stroke-linecap="round" stroke-linejoin="round"/>';
+}
+
+async function toggleFullscreen(){
+  try{
+    const current = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!current){
+      const root = document.documentElement;
+      if (root.requestFullscreen) await root.requestFullscreen();
+      else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+    } else {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+  } catch (error){
+    console.warn('[Fullscreen]', error);
+  }
+  updateFullscreenControl();
+  requestScreenWakeLock();
+}
+
+function updateWakeControl(state){
+  const button = document.getElementById('wakeControl');
+  if (!button) return;
+  button.classList.remove('is-active','is-unavailable');
+  if (state === 'active'){
+    button.classList.add('is-active');
+    button.title = 'หน้าจอจะไม่ดับ / Screen wake lock active';
+  } else if (state === 'unsupported'){
+    button.classList.add('is-unavailable');
+    button.title = 'อุปกรณ์นี้ไม่รองรับ Screen Wake Lock';
+  } else {
+    button.title = 'ป้องกันหน้าจอดับ / Keep screen awake';
+  }
+}
+
+async function requestScreenWakeLock(){
+  if (!wakeLockDesired) return;
+  if (!('wakeLock' in navigator)){
+    updateWakeControl('unsupported');
+    return;
+  }
+  if (document.visibilityState !== 'visible') return;
+  if (wakeLockSentinel && !wakeLockSentinel.released){
+    updateWakeControl('active');
+    return;
+  }
+  try{
+    wakeLockSentinel = await navigator.wakeLock.request('screen');
+    updateWakeControl('active');
+    wakeLockSentinel.addEventListener('release', () => {
+      wakeLockSentinel = null;
+      updateWakeControl('idle');
+    }, { once:true });
+  } catch (error){
+    wakeLockSentinel = null;
+    updateWakeControl('idle');
+    console.warn('[Wake Lock]', error);
+  }
+}
+
+async function toggleWakeLock(){
+  wakeLockDesired = !wakeLockDesired;
+  if (!wakeLockDesired && wakeLockSentinel){
+    try{ await wakeLockSentinel.release(); } catch (error){ console.warn('[Wake Lock release]', error); }
+    wakeLockSentinel = null;
+    updateWakeControl('idle');
+    return;
+  }
+  requestScreenWakeLock();
+}
+
+function setupDisplayControls(){
+  document.getElementById('fullscreenControl')?.addEventListener('click', toggleFullscreen);
+  document.getElementById('wakeControl')?.addEventListener('click', toggleWakeLock);
+  document.addEventListener('fullscreenchange', updateFullscreenControl);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenControl);
+  document.addEventListener('keydown', event => {
+    if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey && !event.altKey){
+      toggleFullscreen();
+    }
+  });
+  updateFullscreenControl();
+  requestScreenWakeLock();
+}
+
+function scheduleDailyReload(){
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(CONFIG.DAILY_RELOAD_HOUR, CONFIG.DAILY_RELOAD_MINUTE, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  window.setTimeout(() => location.reload(), Math.max(1000, next - now));
+}
+
+
+function setPublicSyncWarning(message=''){
+  const el = document.getElementById('publicSyncWarning');
+  if (!el) return;
+  if (message){
+    el.textContent = message;
+    el.classList.add('show');
+  } else {
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+}
+
+function setupResilience(){
+  window.addEventListener('online', () => {
+    setPublicSyncWarning('');
+    updateSyncStatus();
+    syncNow('online');
+    requestScreenWakeLock();
+  });
+  window.addEventListener('offline', () => {
+    updateSyncStatus();
+    setPublicSyncWarning('การเชื่อมต่ออินเทอร์เน็ตขัดข้อง ข้อมูลคิวอาจไม่เป็นปัจจุบัน');
+  });
+  window.addEventListener('focus', () => syncNow('focus'));
+  window.addEventListener('pageshow', () => syncNow('pageshow'));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible'){
+      lastHeartbeatAt = Date.now();
+      updateSessionProgress();
+      updateSyncStatus();
+      syncNow('visible');
+      requestScreenWakeLock();
+    }
+  });
+
+  window.setInterval(() => {
+    const now = Date.now();
+    const drift = now - lastHeartbeatAt;
+    lastHeartbeatAt = now;
+    if (drift > 90000){
+      updateSessionProgress();
+      syncNow('watchdog-resume');
+      requestScreenWakeLock();
+    } else if (lastSuccessfulSyncAt && now - lastSuccessfulSyncAt >= CONFIG.STALE_WARN_MS){
+      setPublicSyncWarning('ข้อมูลคิวอาจล่าช้า ระบบกำลังเชื่อมต่อใหม่');
+      syncNow('stale-watchdog');
+    }
+    updateSyncStatus();
+  }, 30000);
+
+  scheduleDailyReload();
+}
+
 /* ---------------- Init ---------------- */
 createAmbientParticles();
 setupMotionEffects();
+setupLanguageCycle();
+setupDisplayControls();
+setupSyncDebugToggle();
+setupResilience();
 updateAtmosphere();
 tickClock();
-setInterval(tickClock, 1000);
-setInterval(updateAtmosphere, 60000);
-setInterval(updateSessionProgress, 15000);
-syncNow();
-setInterval(syncNow, CONFIG.REFRESH_MS);
+updateSyncStatus();
+window.setInterval(tickClock, 1000);
+window.setInterval(updateAtmosphere, 60000);
+window.setInterval(updateSessionProgress, 15000);
+syncNow('initial');
+window.setInterval(() => syncNow('interval'), CONFIG.REFRESH_MS);
 </script>
 
+<div id="publicSyncWarning" role="status" aria-live="polite"></div>
 </body>
 </html>
