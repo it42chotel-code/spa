@@ -1549,7 +1549,7 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V5.1 Stable - Booking Display Fix",
+  BUILD: "V5.1 Stable - Booking Fix 2",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -1816,8 +1816,8 @@ function buildScheduleMap(rows){
         fieldByNameOrPosition(r, 'End', 12) ||
         fieldByNameOrPosition(r, 'End_Time', 12);
 
-      let start = parseTimeToMinutes(startRaw);
-      let end = parseTimeToMinutes(endRaw);
+      let start = parseExactTime(startRaw);
+      let end = parseExactTime(endRaw);
 
       // Fallback end time: derive from duration or the next hour only when explicit end is absent.
       if (!Number.isFinite(start)) return;
@@ -2291,6 +2291,26 @@ function applySettings(settingsRows){
   if (map.Tagline_EN && document.getElementById('taglineEn')) document.getElementById('taglineEn').textContent = map.Tagline_EN;
 }
 
+
+function validateScheduleRuntime(scheduleRows, scheduleMap){
+  const busyRows = (scheduleRows || []).filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2)));
+  const bookingCount = Object.values(scheduleMap || {}).reduce((sum, list) => sum + (list?.length || 0), 0);
+
+  if (busyRows.length > 0 && bookingCount === 0){
+    console.error('[Spa Queue] Busy rows exist but no bookings were parsed.', {
+      build: CONFIG.BUILD,
+      busyRows: busyRows.length,
+      firstBusyRow: busyRows[0]
+    });
+  } else {
+    console.info('[Spa Queue] Schedule parsed', {
+      build: CONFIG.BUILD,
+      busyRows: busyRows.length,
+      bookings: bookingCount
+    });
+  }
+}
+
 /* ---------------- Sync loop ---------------- */
 async function fetchScheduleRows(){
   const attempts = [
@@ -2426,6 +2446,7 @@ async function syncNow(reason = 'interval'){
       fetchTab(CONFIG.SETTINGS_TAB).catch(() => [])
     ]);
     const scheduleMap = buildScheduleMap(scheduleRows);
+    validateScheduleRuntime(scheduleRows, scheduleMap);
     const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
     const busyRowCount = scheduleRows.filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2))).length;
 
