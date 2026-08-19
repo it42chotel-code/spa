@@ -1972,6 +1972,253 @@ body[data-queue-state="closed"] .grand-live{box-shadow:0 0 26px rgba(239,208,138
   .grand-cards{grid-template-columns:1fr;grid-template-rows:none}
 }
 
+
+/* ===================== V12 GRAND CINEMATIC LUXURY ===================== */
+:root{
+  --px:0;
+  --py:0;
+  --cinema-gold:#f0d48a;
+  --cinema-gold-deep:#b27a21;
+  --cinema-green:#baf07f;
+  --cinema-orange:#f59a5d;
+}
+.grand-bg{
+  transform:translate3d(calc(var(--px) * -4px),calc(var(--py) * -3px),0);
+  transition:filter .8s ease;
+}
+.grand-bg-dark{
+  background:
+    linear-gradient(90deg,rgba(3,2,1,.12) 0%,rgba(3,2,1,.30) 38%,rgba(3,2,1,.67) 100%),
+    linear-gradient(180deg,rgba(3,2,1,.02),rgba(3,2,1,.50))!important;
+}
+.grand-bg-gold{
+  transform:translate3d(calc(var(--px) * 7px),calc(var(--py) * 4px),0) scale(1.03);
+  transition:transform .25s linear;
+}
+.cinema-beam{
+  position:absolute;
+  width:18vw;
+  height:150vh;
+  top:-24vh;
+  background:linear-gradient(180deg,rgba(255,235,174,0),rgba(255,219,123,.08) 34%,rgba(255,204,88,.16) 58%,rgba(255,235,174,0));
+  filter:blur(18px);
+  transform-origin:top center;
+  mix-blend-mode:screen;
+  opacity:.42;
+}
+.beam-a{
+  left:18%;
+  transform:rotate(17deg) translate3d(calc(var(--px)*8px),0,0);
+  animation:beamPulse 9s ease-in-out infinite;
+}
+.beam-b{
+  right:12%;
+  transform:rotate(-15deg) translate3d(calc(var(--px)*-7px),0,0);
+  opacity:.24;
+  animation:beamPulse 12s 1.8s ease-in-out infinite;
+}
+@keyframes beamPulse{
+  0%,100%{opacity:.18}
+  50%{opacity:.56}
+}
+.cinema-flare{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,232,167,.75) 0,rgba(255,201,77,.18) 24%,rgba(255,201,77,0) 68%);
+  filter:blur(1px);
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+.flare-a{
+  width:28vw;height:28vw;left:18%;top:8%;
+  animation:flareFloat 11s ease-in-out infinite alternate;
+}
+.flare-b{
+  width:18vw;height:18vw;right:10%;bottom:6%;opacity:.45;
+  animation:flareFloat 14s 2s ease-in-out infinite alternate-reverse;
+}
+@keyframes flareFloat{
+  from{transform:translate3d(-1%,0,0) scale(.94);opacity:.22}
+  to{transform:translate3d(2%,-2%,0) scale(1.06);opacity:.48}
+}
+.cinema-grain{
+  position:absolute;inset:-20%;
+  opacity:.035;
+  background-image:
+    repeating-radial-gradient(circle at 0 0,rgba(255,255,255,.9) 0 1px,transparent 1px 3px);
+  background-size:7px 7px;
+  animation:grainMove .6s steps(2) infinite;
+  mix-blend-mode:soft-light;
+}
+@keyframes grainMove{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(1%,0)}
+  50%{transform:translate(0,1%)}
+  75%{transform:translate(-1%,0)}
+  100%{transform:translate(0,-1%)}
+}
+.grand-left{
+  transform:translate3d(calc(var(--px) * 3px),calc(var(--py) * 2px),0);
+  transition:transform .2s linear;
+}
+.grand-right{
+  transform:translate3d(calc(var(--px) * -3px),calc(var(--py) * -2px),0);
+  transition:transform .2s linear;
+}
+.grand-hero-main{
+  position:relative;
+  background:
+    linear-gradient(180deg,#fff1b8 0%,#f0d48a 38%,#b78128 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:none!important;
+  filter:drop-shadow(0 14px 36px rgba(0,0,0,.52)) drop-shadow(0 0 18px rgba(235,190,82,.16));
+}
+.grand-hero-main::after{
+  content:"UNWIND";
+  position:absolute;inset:0;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,226,145,.16);
+  transform:translateY(2px);
+  filter:blur(3px);
+  opacity:.8;
+  pointer-events:none;
+}
+.cinema-caption{
+  margin-top:-2px;
+  margin-bottom:8px;
+  font-family:var(--font-english);
+  color:#bc9b5f;
+  font-size:10px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+}
+.cinema-ornament{
+  position:absolute;
+  top:64%;
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;
+  color:#f1d28a;
+  border:1px solid rgba(241,210,138,.46);
+  box-shadow:0 0 18px rgba(240,205,119,.10),inset 0 0 14px rgba(240,205,119,.05);
+  font-size:13px;
+  opacity:.78;
+  animation:ornamentPulse 5s ease-in-out infinite;
+}
+.ornament-left{left:-28px}
+.ornament-right{right:calc(100% - min(710px,96%) - 28px)}
+@keyframes ornamentPulse{
+  0%,100%{transform:scale(.95);opacity:.42}
+  50%{transform:scale(1.06);opacity:.9}
+}
+.grand-live{
+  clip-path:polygon(2.2% 0,97.8% 0,100% 20%,100% 80%,97.8% 100%,2.2% 100%,0 80%,0 20%);
+  transition:box-shadow .8s ease,border-color .8s ease,background .8s ease,transform .8s ease;
+}
+.grand-live::after{
+  content:""!important;
+  position:absolute!important;
+  left:-120px!important;
+  top:0!important;
+  width:90px!important;
+  height:100%!important;
+  background:linear-gradient(90deg,transparent,rgba(255,236,183,.36),transparent)!important;
+  transform:skewX(-20deg)!important;
+  animation:cinematicSweep 6.6s ease-in-out infinite!important;
+  box-shadow:none!important;
+  opacity:1!important;
+}
+@keyframes cinematicSweep{
+  0%,28%{left:-140px}
+  62%,100%{left:110%}
+}
+.scene-available .grand-live{
+  border-color:rgba(186,240,127,.62);
+  box-shadow:0 0 34px rgba(186,240,127,.10),0 0 70px rgba(205,168,73,.08),inset 0 0 32px rgba(186,240,127,.025);
+}
+.scene-busy .grand-live{
+  border-color:rgba(245,154,93,.58);
+  box-shadow:0 0 34px rgba(245,154,93,.09),0 0 70px rgba(205,168,73,.06),inset 0 0 32px rgba(245,154,93,.025);
+}
+.scene-closed .grand-live{
+  border-color:rgba(240,212,138,.46);
+  box-shadow:0 0 28px rgba(240,212,138,.08),inset 0 0 28px rgba(240,212,138,.02);
+}
+.scene-available .grand-bg-gold{filter:saturate(1.12) brightness(1.06)}
+.scene-busy .grand-bg-gold{filter:hue-rotate(-8deg) saturate(1.08) brightness(.96)}
+.scene-closed .grand-bg-gold{filter:saturate(.72) brightness(.72)}
+.grand-card{
+  transition:transform .8s cubic-bezier(.22,.61,.36,1),box-shadow .8s ease,border-color .8s ease;
+  transform-style:preserve-3d;
+}
+.grand-card:hover{
+  transform:translateY(-4px) rotateX(calc(var(--py) * -1.1deg)) rotateY(calc(var(--px) * 1.1deg));
+  box-shadow:0 34px 78px rgba(0,0,0,.42),0 0 30px rgba(222,182,83,.08),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.cinema-card-enter{
+  animation:cinemaCardEnter .95s var(--card-delay,0ms) cubic-bezier(.18,.78,.24,1) both;
+}
+@keyframes cinemaCardEnter{
+  from{opacity:0;transform:translateY(20px) scale(.985);filter:blur(5px)}
+  to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+.grand-card::after{
+  content:"";
+  position:absolute;inset:0;
+  background:
+    linear-gradient(105deg,transparent 0 42%,rgba(255,226,153,.08) 47%,rgba(255,226,153,.03) 52%,transparent 58%);
+  transform:translateX(-130%);
+  animation:cardSheen 9s ease-in-out infinite;
+  pointer-events:none;
+}
+.grand-card:nth-child(2)::after{animation-delay:2.7s}
+@keyframes cardSheen{
+  0%,35%{transform:translateX(-130%)}
+  58%,100%{transform:translateX(130%)}
+}
+.grand-card-photo{
+  transform:translate3d(calc(var(--px) * 3px),calc(var(--py) * 2px),0) scale(1.02);
+  transition:transform .25s linear;
+}
+.grand-status-ring{
+  animation:statusRingBreath 4s ease-in-out infinite;
+}
+@keyframes statusRingBreath{
+  0%,100%{box-shadow:0 0 10px currentColor;transform:scale(.97)}
+  50%{box-shadow:0 0 20px currentColor;transform:scale(1.03)}
+}
+.grand-frame{
+  animation:frameGlow 6s ease-in-out infinite;
+}
+@keyframes frameGlow{
+  0%,100%{opacity:.58}
+  50%{opacity:1}
+}
+.grand-corner::after{
+  content:"";
+  position:absolute;
+  width:6px;height:6px;border-radius:50%;
+  background:#f0d48a;
+  box-shadow:0 0 10px #f0d48a;
+}
+.corner-tl::after{top:-3px;left:-3px}
+.corner-tr::after{top:-3px;right:-3px}
+.corner-bl::after{bottom:-3px;left:-3px}
+.corner-br::after{bottom:-3px;right:-3px}
+.display-controls{
+  opacity:.08!important;
+  transform:translateY(3px);
+  transition:opacity .3s ease,transform .3s ease!important;
+}
+.display-controls:hover{
+  opacity:1!important;
+  transform:translateY(0);
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+  .grand-left,.grand-right,.grand-bg,.grand-bg-gold,.grand-card-photo{transform:none!important}
+}
+
 </style>
 </head>
 <body data-queue-state="idle">
@@ -1981,6 +2228,11 @@ body[data-queue-state="closed"] .grand-live{box-shadow:0 0 26px rgba(239,208,138
   <div class="grand-light grand-light-a"></div>
   <div class="grand-light grand-light-b"></div>
   <div class="grand-particles" id="grandParticles"></div>
+  <div class="cinema-beam beam-a"></div>
+  <div class="cinema-beam beam-b"></div>
+  <div class="cinema-flare flare-a"></div>
+  <div class="cinema-flare flare-b"></div>
+  <div class="cinema-grain"></div>
 </div>
 
 <main class="grand-shell">
@@ -2011,11 +2263,14 @@ body[data-queue-state="closed"] .grand-live{box-shadow:0 0 26px rgba(239,208,138
       <div class="grand-hero-ornament">
         <span></span><b>✦</b><span></span>
       </div>
+      <div class="cinema-caption">PRIVATE • QUIET • RESTORATIVE</div>
       <div class="grand-hero-sub lang-pair lang-pair-block">
         <span class="lang-th-text">ประสบการณ์สปาที่หรูหรา ผ่อนคลาย และน่าจดจำ</span>
         <span class="lang-en-text en">RELAX • RESTORE • RECHARGE</span>
       </div>
 
+      <div class="cinema-ornament ornament-left" aria-hidden="true">✦</div>
+      <div class="cinema-ornament ornament-right" aria-hidden="true">✦</div>
       <div class="grand-live available" id="heroAvailability">
         <div class="grand-live-glow"></div>
         <div class="grand-live-main">AVAILABLE NOW</div>
@@ -2079,7 +2334,7 @@ body[data-queue-state="closed"] .grand-live{box-shadow:0 0 26px rgba(239,208,138
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V11.0 Grand Luxury Master",
+  BUILD: "V12.0 Grand Cinematic Luxury",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -2665,6 +2920,52 @@ function updateLandscapeHero(availableCount, shopOpen){
 }
 
 
+
+function setupCinematicScene(){
+  const root = document.documentElement;
+  const shell = document.querySelector('.grand-shell');
+  if (!shell || shell.dataset.cinemaReady === '1') return;
+  shell.dataset.cinemaReady = '1';
+
+  let targetX = 0, targetY = 0, currentX = 0, currentY = 0;
+
+  const updateTarget = (x, y) => {
+    const nx = Math.max(-1, Math.min(1, x));
+    const ny = Math.max(-1, Math.min(1, y));
+    targetX = nx;
+    targetY = ny;
+  };
+
+  window.addEventListener('pointermove', e => {
+    updateTarget((e.clientX / Math.max(innerWidth,1) - .5) * 2, (e.clientY / Math.max(innerHeight,1) - .5) * 2);
+  }, {passive:true});
+
+  window.addEventListener('pointerleave', () => updateTarget(0,0), {passive:true});
+
+  function animate(){
+    currentX += (targetX - currentX) * .035;
+    currentY += (targetY - currentY) * .035;
+    root.style.setProperty('--px', currentX.toFixed(4));
+    root.style.setProperty('--py', currentY.toFixed(4));
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
+function setupCinematicCardReveal(){
+  const grid = document.getElementById('cardGrid');
+  if (!grid) return;
+  const observer = new MutationObserver(() => {
+    [...grid.querySelectorAll('.grand-card')].forEach((card, idx) => {
+      card.style.setProperty('--card-delay', `${idx * 130}ms`);
+      card.classList.remove('cinema-card-enter');
+      void card.offsetWidth;
+      card.classList.add('cinema-card-enter');
+    });
+  });
+  observer.observe(grid, {childList:true});
+}
+
 function buildGrandParticles(){
   const layer = document.getElementById('grandParticles');
   if (!layer || layer.dataset.ready === '1') return;
@@ -2685,6 +2986,8 @@ function buildGrandParticles(){
 
 function updateGrandHeroState(state){
   document.body.dataset.queueState = state;
+  document.body.classList.remove('scene-available','scene-busy','scene-closed');
+  document.body.classList.add(`scene-${state}`);
 }
 
 function updateGrandHero(availableCount, shopOpen){
@@ -3417,6 +3720,8 @@ setupMotionEffects();
 setupLanguageCycle();
 setupDisplayControls();
   buildGrandParticles();
+  setupCinematicScene();
+  setupCinematicCardReveal();
   
 setupSyncDebugToggle();
 setupResilience();
