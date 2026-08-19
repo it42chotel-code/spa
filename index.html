@@ -1448,6 +1448,299 @@
   }
   #publicSyncWarning.show{ display:block; }
 
+
+/* ===================== Symmetric busy-info layout ===================== */
+.customer-info{
+  display:none!important;
+}
+.customer-info-grid{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+.customer-info-row{
+  display:grid;
+  grid-template-columns:84px minmax(0, 1fr);
+  align-items:center;
+  gap:8px;
+  min-height:34px;
+  padding:6px 10px;
+  border-radius:12px;
+  border:1px solid rgba(166,70,47,.12);
+  background:rgba(255,248,244,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+}
+.customer-info-label{
+  font-size:11px;
+  font-weight:700;
+  color:#9A6F55;
+  letter-spacing:.2px;
+  text-transform:uppercase;
+}
+.customer-info-label .lang-pair{
+  display:block;
+}
+.customer-info-value{
+  min-width:0;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.3;
+  color:#5F473D;
+  text-align:left;
+  overflow-wrap:anywhere;
+}
+.customer-info-value .en{
+  display:none;
+}
+body.lang-en .customer-info-value{
+  font-size:11.5px;
+}
+body.lang-en .customer-info-value{
+  color:#5D4A41;
+}
+body.lang-en .customer-info-value .en{
+  display:inline;
+}
+body.lang-en .customer-info-value{
+  white-space:normal;
+}
+body.lang-en .customer-info-row{
+  grid-template-columns:96px minmax(0, 1fr);
+}
+.current-until{
+  margin-top:10px!important;
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:7px 12px;
+  border-radius:12px;
+  background:rgba(198,162,77,.10);
+  border:1px solid rgba(198,162,77,.18);
+  color:#A55A38!important;
+  text-align:center;
+}
+.state-busy .status-row{
+  align-items:flex-start;
+}
+.state-busy .status-hint.busy{
+  width:100%;
+}
+@media (max-width:640px){
+  .customer-info-row{
+    grid-template-columns:72px minmax(0, 1fr);
+    gap:7px;
+    padding:6px 8px;
+  }
+  body.lang-en .customer-info-row{
+    grid-template-columns:82px minmax(0, 1fr);
+  }
+  .customer-info-label{font-size:10px;}
+  .customer-info-value{font-size:11px;}
+}
+
+
+/* ===================== Equal Available / Busy information layout ===================== */
+
+/* Keep the main current-status panel the same height for every therapist */
+.status-row{
+  min-height:168px!important;
+  align-items:flex-start!important;
+  padding-top:16px!important;
+  padding-bottom:16px!important;
+}
+
+/* Make the text column use the full available height consistently */
+.status-row > div:last-child{
+  width:100%;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Available state: reserve the same information space as Busy */
+.state-available .status-hint{
+  min-height:92px;
+  display:flex;
+  align-items:center;
+  padding-top:10px;
+  padding-bottom:10px;
+}
+
+/* Busy state: compact the 3 data rows so the block fits the same height */
+.state-busy .status-hint.busy{
+  min-height:92px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+/* Symmetric booking info: 3 compact rows with fixed vertical rhythm */
+.customer-info-grid{
+  width:100%;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:5px!important;
+  margin-top:7px!important;
+}
+.customer-info-row{
+  min-height:25px!important;
+  padding:3px 8px!important;
+  border-radius:10px!important;
+  grid-template-columns:72px minmax(0,1fr)!important;
+  gap:7px!important;
+}
+.customer-info-label{
+  font-size:10px!important;
+  line-height:1.15!important;
+}
+.customer-info-value{
+  font-size:10.5px!important;
+  line-height:1.15!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Exact end-time badge stays aligned to the bottom of the same panel */
+.current-until{
+  min-height:30px!important;
+  margin-top:6px!important;
+  padding:5px 10px!important;
+  border-radius:10px!important;
+  flex:0 0 auto;
+}
+
+/* Keep progress block geometry identical between states */
+.session-progress,
+.session-progress.available-progress{
+  min-height:58px!important;
+  margin-top:12px!important;
+  margin-bottom:12px!important;
+  padding:10px 12px!important;
+}
+
+/* Make next-booking section start at the same vertical position */
+.next-label{
+  margin-top:0!important;
+}
+
+/* Keep card bodies visually balanced */
+.card-body{
+  display:flex;
+  flex-direction:column;
+}
+.card-body .next-label{
+  flex:0 0 auto;
+}
+
+/* Allow busy info to wrap on very small widths instead of breaking layout */
+@media (max-width:1100px){
+  .status-row{
+    min-height:178px!important;
+  }
+  .state-available .status-hint,
+  .state-busy .status-hint.busy{
+    min-height:102px;
+  }
+  .customer-info-value{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+}
+
+
+/* ===================== Formal Available-State Information ===================== */
+.available-info-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:5px;
+  margin-top:7px;
+}
+.available-info-row{
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  min-height:25px;
+  padding:3px 9px;
+  border-radius:10px;
+  border:1px solid rgba(69,132,90,.13);
+  background:rgba(246,252,247,.76);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72);
+}
+.available-info-label{
+  color:#66816d;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.15;
+  letter-spacing:.2px;
+  text-transform:uppercase;
+}
+.available-info-value{
+  min-width:0;
+  color:#315f42;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:1.15;
+  text-align:left;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.available-info-value.available-official{
+  color:var(--available);
+}
+.available-until{
+  min-height:30px;
+  margin-top:1px;
+  padding:5px 10px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(69,132,90,.13);
+  background:rgba(222,242,226,.62);
+  color:#2F7549;
+  font-size:11px;
+  font-weight:750;
+  text-align:center;
+}
+.available-info-grid.pre-open .available-info-row{
+  border-color:rgba(198,162,77,.18);
+  background:rgba(255,251,240,.75);
+}
+.available-info-grid.pre-open .available-info-label{
+  color:#8b7142;
+}
+.available-info-grid.pre-open .available-info-value{
+  color:#765e37;
+}
+
+/* Keep Available and Busy panels visually equivalent */
+.state-available .status-hint{
+  min-height:92px!important;
+  display:flex!important;
+  align-items:stretch!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+}
+.state-available .status-hint > .available-info-grid{
+  flex:1 1 auto;
+}
+@media(max-width:1100px){
+  .available-info-row{
+    grid-template-columns:82px minmax(0,1fr);
+  }
+  .available-info-value{
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1549,7 +1842,7 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V5.1 Stable - Booking Fix 2",
+  BUILD: "V5.1 Stable - Formal Available UI",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -1595,10 +1888,20 @@ function customerInfoMarkup(customerName, course, customerType){
   const safeName = escapeHtml(cleanCell(customerName) || 'ไม่ระบุ');
   const safeCourse = escapeHtml(cleanCell(course) || 'ไม่ระบุ');
   const type = normalizeCustomerTypeLabel(customerType);
-  return `<div class="customer-info">
-    <span class="customer-info-item customer-name">${languagePair(`ชื่อ: ${safeName}`, `Name: ${safeName}`)}</span>
-    <span class="customer-info-item customer-course">${languagePair(`คอร์ส: ${safeCourse}`, `Course: ${safeCourse}`)}</span>
-    <span class="customer-info-item customer-type">${languagePair(`ประเภท: ${escapeHtml(type.th)}`, `Type: ${escapeHtml(type.en)}`)}</span>
+
+  return `<div class="customer-info-grid">
+    <div class="customer-info-row">
+      <div class="customer-info-label">${languagePair('ชื่อ', 'Name')}</div>
+      <div class="customer-info-value">${safeName}</div>
+    </div>
+    <div class="customer-info-row">
+      <div class="customer-info-label">${languagePair('คอร์ส', 'Course')}</div>
+      <div class="customer-info-value">${safeCourse}</div>
+    </div>
+    <div class="customer-info-row">
+      <div class="customer-info-label">${languagePair('ประเภท', 'Type')}</div>
+      <div class="customer-info-value">${escapeHtml(type.th)}<span class="en">${escapeHtml(type.en)}</span></div>
+    </div>
   </div>`;
 }
 
@@ -1802,19 +2105,27 @@ function buildScheduleMap(rows){
       const status = fieldByNameOrPosition(r, 'Status', 2);
       if (!isBusyStatus(status)) return;
 
-      // Prefer explicit actual booking times (L:M in the user's sheet) when available.
-      const startRaw =
+      // Prefer exact real booking times (L:M). Track whether each value
+      // came from the explicit real-time columns so merge logic never
+      // lets a fallback hourly row overwrite an exact minute value.
+      const explicitStartRaw =
         fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11) ||
         fieldByNameOrPosition(r, 'เวลาเริ่มจอง', 11) ||
         fieldByNameOrPosition(r, 'Start', 11) ||
-        fieldByNameOrPosition(r, 'Start_Time', 11) ||
-        fieldByNameOrPosition(r, 'Time_Slot', 1);
+        fieldByNameOrPosition(r, 'Start_Time', 11);
 
-      const endRaw =
+      const explicitEndRaw =
         fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12) ||
         fieldByNameOrPosition(r, 'เวลาสิ้นสุดจอง', 12) ||
         fieldByNameOrPosition(r, 'End', 12) ||
         fieldByNameOrPosition(r, 'End_Time', 12);
+
+      const slotRaw = fieldByNameOrPosition(r, 'Time_Slot', 1);
+      const startRaw = explicitStartRaw || slotRaw;
+      const endRaw = explicitEndRaw;
+
+      const hasExplicitStart = cleanCell(explicitStartRaw) !== '';
+      const hasExplicitEnd = cleanCell(explicitEndRaw) !== '';
 
       let start = parseExactTime(startRaw);
       let end = parseExactTime(endRaw);
@@ -1881,6 +2192,8 @@ function buildScheduleMap(rows){
         endMin: end,
         startLabel: minutesToLabel(start),
         endLabel: minutesToLabel(end),
+        hasExplicitStart,
+        hasExplicitEnd,
         start,
         end,
         customer: String(customer || '').trim(),
@@ -1907,9 +2220,29 @@ function buildScheduleMap(rows){
     for (const item of list){
       const prev = merged[merged.length - 1];
       if (prev && item.startMin <= prev.endMin){
-        prev.endMin = Math.max(prev.endMin, item.endMin);
-        prev.end = prev.endMin;
-        prev.endLabel = minutesToLabel(prev.endMin);
+        // Exact real times must take priority over inferred hourly bounds.
+        if (item.hasExplicitStart && !prev.hasExplicitStart){
+          prev.startMin = item.startMin;
+          prev.start = item.startMin;
+          prev.startLabel = item.startLabel;
+          prev.hasExplicitStart = true;
+        } else if (!prev.hasExplicitStart){
+          prev.startMin = Math.min(prev.startMin, item.startMin);
+          prev.start = prev.startMin;
+          prev.startLabel = minutesToLabel(prev.startMin);
+        }
+
+        if (item.hasExplicitEnd){
+          prev.endMin = item.endMin;
+          prev.end = item.endMin;
+          prev.endLabel = item.endLabel;
+          prev.hasExplicitEnd = true;
+        } else if (!prev.hasExplicitEnd){
+          prev.endMin = Math.max(prev.endMin, item.endMin);
+          prev.end = prev.endMin;
+          prev.endLabel = minutesToLabel(prev.endMin);
+        }
+
         if (!prev.customer && item.customer) prev.customer = item.customer;
         if (!prev.room && item.room) prev.room = item.room;
         if (!prev.course && item.course) prev.course = item.course;
@@ -1925,6 +2258,11 @@ function buildScheduleMap(rows){
         merged.push({...item});
       }
     }
+    merged.forEach(b => {
+      if (b.hasExplicitEnd && b.endLabel !== minutesToLabel(b.endMin)){
+        console.warn('[Spa Queue] exact end-time label mismatch', {therapistId:id, booking:b});
+      }
+    });
     map[id] = merged;
   });
 
@@ -2098,6 +2436,37 @@ function calendarSvg(){
 const previousStatusMap = {};
 let hasRenderedOnce = false;
 
+
+function availableInfoMarkup(view){
+  const nextBusy = (view?.nextThree || []).find(item => item.type === 'busy');
+  const nextBookingTh = nextBusy?.startLabel ? `${nextBusy.startLabel} น.` : 'ยังไม่มีคิวจอง';
+  const nextBookingEn = nextBusy?.startLabel ? nextBusy.startLabel : 'No booking scheduled';
+
+  const serviceUntilTh = view?.availableEndLabel
+    ? `${view.availableEndLabel} น.`
+    : `${String(CONFIG.CLOSE_HOUR).padStart(2,'0')}:00 น.`;
+
+  const serviceUntilEn = view?.availableEndLabel
+    ? view.availableEndLabel
+    : `${String(CONFIG.CLOSE_HOUR).padStart(2,'0')}:00`;
+
+  return `<div class="available-info-grid">
+    <div class="available-info-row">
+      <div class="available-info-label">${languagePair('สถานะ','Status')}</div>
+      <div class="available-info-value available-official">${languagePair('พร้อมให้บริการ','Ready for service')}</div>
+    </div>
+    <div class="available-info-row">
+      <div class="available-info-label">${languagePair('คิวถัดไป','Next booking')}</div>
+      <div class="available-info-value">${languagePair(nextBookingTh, nextBookingEn)}</div>
+    </div>
+    <div class="available-info-row">
+      <div class="available-info-label">${languagePair('บริการ','Service')}</div>
+      <div class="available-info-value">${languagePair('รับ Walk-in ได้ทันที','Walk-in available now')}</div>
+    </div>
+    <div class="available-until">${languagePair(`พร้อมให้บริการถึง ${serviceUntilTh}`, `Available for service until ${serviceUntilEn}`)}</div>
+  </div>`;
+}
+
 function renderCards(queueList, scheduleMap){
   const grid = document.getElementById('cardGrid');
   if (!queueList.length){
@@ -2242,10 +2611,21 @@ function renderCards(queueList, scheduleMap){
     const queueStartLabel = String(CONFIG.QUEUE_START_HOUR).padStart(2, '0') + ':00';
     const hint = available
       ? (beforeQueueStart
-          ? languagePair(`เริ่มรับคิวเวลา ${queueStartLabel} น.`,`Queue starts at ${queueStartLabel}`)
-          : (isLastHour
-              ? languagePair('กำลังอยู่ในช่วงคิวสุดท้ายของวันนี้','Last service period today')
-              : languagePair('พร้อมรับลูกค้าทันที','Ready for walk-in')))
+          ? `<div class="available-info-grid pre-open">
+               <div class="available-info-row">
+                 <div class="available-info-label">${languagePair('สถานะ','Status')}</div>
+                 <div class="available-info-value">${languagePair('รอเวลาเปิดรับคิว','Waiting for queue opening')}</div>
+               </div>
+               <div class="available-info-row">
+                 <div class="available-info-label">${languagePair('เริ่มรับคิว','Queue starts')}</div>
+                 <div class="available-info-value">${queueStartLabel}</div>
+               </div>
+               <div class="available-info-row">
+                 <div class="available-info-label">${languagePair('บริการ','Service')}</div>
+                 <div class="available-info-value">${languagePair('กรุณาติดต่อ Front Reception','Please contact Front Reception')}</div>
+               </div>
+             </div>`
+          : availableInfoMarkup(view))
       : `${customerInfoMarkup(view.currentCustomerName, view.currentCourse, view.currentCustomerType)}
          <div class="current-until">${languagePair(`ให้บริการถึง ${view.currentEndLabel} น.`,`In service until ${view.currentEndLabel}`)}</div>`;
 
