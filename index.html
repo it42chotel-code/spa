@@ -1549,7 +1549,7 @@
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V5.1 Stable",
+  BUILD: "V5.1 Stable - Booking Display Fix",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -1877,6 +1877,10 @@ function buildScheduleMap(rows){
 
       const item = {
         therapistId,
+        startMin: start,
+        endMin: end,
+        startLabel: minutesToLabel(start),
+        endLabel: minutesToLabel(end),
         start,
         end,
         customer: String(customer || '').trim(),
@@ -1895,15 +1899,17 @@ function buildScheduleMap(rows){
   });
 
   Object.keys(map).forEach(id => {
-    const list = map[id].sort((a,b) => a.start - b.start || a.end - b.end);
+    const list = map[id].sort((a,b) => a.startMin - b.startMin || a.endMin - b.endMin);
 
     // Merge overlapping/adjacent rows belonging to the same real booking period,
     // while preserving the richest display data.
     const merged = [];
     for (const item of list){
       const prev = merged[merged.length - 1];
-      if (prev && item.start <= prev.end){
-        prev.end = Math.max(prev.end, item.end);
+      if (prev && item.startMin <= prev.endMin){
+        prev.endMin = Math.max(prev.endMin, item.endMin);
+        prev.end = prev.endMin;
+        prev.endLabel = minutesToLabel(prev.endMin);
         if (!prev.customer && item.customer) prev.customer = item.customer;
         if (!prev.room && item.room) prev.room = item.room;
         if (!prev.course && item.course) prev.course = item.course;
