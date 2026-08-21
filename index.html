@@ -1741,6 +1741,453 @@ body.lang-en .customer-info-row{
   }
 }
 
+
+/* ===================== Cleaner upcoming-booking cards ===================== */
+.next-box.is-booked{
+  min-height:76px!important;
+  padding:12px 14px!important;
+}
+.next-box.is-booked .next-box-copy{
+  min-width:0;
+}
+.next-box.is-booked .next-th{
+  font-size:17px!important;
+  line-height:1.2!important;
+}
+.next-box.is-booked .next-en{
+  margin-top:5px!important;
+  font-size:10px!important;
+  letter-spacing:.45px!important;
+}
+.next-box.is-booked .customer-info,
+.next-box.is-booked .customer-info-grid,
+.next-box.is-booked .queue-prep-note{
+  display:none!important;
+}
+.next-box.is-booked .next-box-icon{
+  width:38px!important;
+  height:38px!important;
+}
+
+/* Keep upcoming public data intentionally minimal:
+   time + booked status + queue label only. */
+
+
+/* ===================== Next booking: name + course only ===================== */
+.next-booking-compact-info{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:7px;
+}
+.next-booking-info-item{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(107,74,50,.11);
+  background:rgba(255,253,248,.72);
+  color:#5B4A3B;
+  font-size:11px;
+  font-weight:650;
+  line-height:1.2;
+}
+.next-box.is-booked{
+  min-height:92px!important;
+}
+.next-box.is-booked .next-en{
+  margin-top:6px!important;
+}
+@media(max-width:1100px){
+  .next-booking-info-item{
+    font-size:10px;
+    padding:3px 7px;
+  }
+}
+
+
+/* ===================== Compact Busy Current Status Panel ===================== */
+
+/* Reduce overall height of the current status area */
+.status-row{
+  min-height:142px!important;
+  padding-top:12px!important;
+  padding-bottom:12px!important;
+}
+
+/* Busy card should feel denser and shorter */
+.state-busy .status-hint.busy{
+  min-height:74px!important;
+  gap:0!important;
+  justify-content:flex-start!important;
+}
+
+/* Tighten the top heading block */
+.state-busy .status-label{
+  margin-bottom:2px!important;
+}
+.state-busy .status-title{
+  font-size:17px!important;
+  line-height:1.05!important;
+  margin-bottom:4px!important;
+}
+
+/* Make the 3 info rows more compact */
+.state-busy .customer-info-grid{
+  gap:4px!important;
+  margin-top:5px!important;
+}
+.state-busy .customer-info-row{
+  min-height:22px!important;
+  padding:2px 8px!important;
+  border-radius:9px!important;
+  grid-template-columns:66px minmax(0,1fr)!important;
+  gap:6px!important;
+}
+.state-busy .customer-info-label{
+  font-size:9.5px!important;
+  line-height:1.05!important;
+}
+.state-busy .customer-info-value{
+  font-size:10px!important;
+  line-height:1.08!important;
+}
+
+/* Shorter service-until badge */
+.state-busy .current-until{
+  min-height:25px!important;
+  margin-top:5px!important;
+  padding:4px 10px!important;
+  font-size:10.5px!important;
+  border-radius:9px!important;
+}
+
+/* Shrink the icon area slightly */
+.state-busy .status-icon{
+  width:50px!important;
+  height:50px!important;
+}
+.state-busy .status-icon svg{
+  width:24px!important;
+  height:24px!important;
+}
+
+/* Keep available side balanced but slightly tighter too */
+.state-available .status-hint{
+  min-height:74px!important;
+}
+.available-info-grid{
+  gap:4px!important;
+}
+.available-info-row{
+  min-height:22px!important;
+  padding:2px 8px!important;
+}
+.available-until{
+  min-height:25px!important;
+  padding:4px 10px!important;
+  font-size:10.5px!important;
+}
+
+
+/* ===================== FULL VIEWPORT / NO SCROLL ===================== */
+html, body{
+  width:100%;
+  height:100%;
+  overflow:hidden!important;
+}
+body{
+  padding:0!important;
+  min-height:100vh!important;
+}
+.display-fit-shell{
+  position:fixed;
+  inset:0;
+  z-index:2;
+  overflow:hidden;
+}
+.display-fit-shell .board{
+  position:absolute!important;
+  left:50%;
+  top:50%;
+  width:1400px!important;
+  max-width:none!important;
+  margin:0!important;
+  transform-origin:center center!important;
+  will-change:transform;
+}
+
+/* Controls remain fixed and do not affect fitting */
+.display-controls{
+  z-index:100!important;
+}
+
+/* Avoid accidental horizontal/vertical overflow from effects */
+.ambient-scene{
+  overflow:hidden!important;
+}
+
+
+/* ===================== Center Day Off perfectly ===================== */
+.card.state-off{
+  display:flex!important;
+  flex-direction:column!important;
+}
+.card.state-off .card-top{
+  flex:0 0 auto!important;
+}
+.card.state-off .card-body.day-off-body{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  height:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding:28px 24px!important;
+  gap:10px!important;
+}
+.card.state-off .day-off-icon{
+  margin-bottom:0!important;
+}
+.card.state-off .day-off-sub{
+  margin-top:0!important;
+  max-width:88%;
+}
+
+/* Keep the whole message block centered even when the card height changes */
+.card.state-off .card-body.day-off-body::before,
+.card.state-off .card-body.day-off-body::after{
+  content:"";
+  flex:1 1 0;
+}
+.card.state-off .card-body.day-off-body > *{
+  flex:0 0 auto;
+}
+
+
+/* ===================== LUXURY MOTION PACK ===================== */
+:root{
+  --motion-gold-glow: rgba(198,162,77,.42);
+  --motion-green-glow: rgba(74,164,106,.38);
+  --motion-busy-glow: rgba(198,96,63,.30);
+}
+
+/* Available breathing glow */
+@keyframes availableBreathingGlow{
+  0%,100%{
+    box-shadow:
+      0 0 0 0 rgba(74,164,106,.08),
+      0 0 0 6px rgba(74,164,106,.05),
+      0 10px 28px -18px rgba(74,164,106,.15);
+    filter:saturate(1);
+  }
+  50%{
+    box-shadow:
+      0 0 0 4px rgba(74,164,106,.10),
+      0 0 18px 2px rgba(74,164,106,.16),
+      0 16px 34px -16px rgba(74,164,106,.22);
+    filter:saturate(1.05);
+  }
+}
+.card.state-available .pill.available,
+.card.state-available .status-icon.avail-icon{
+  animation:availableBreathingGlow 3.6s ease-in-out infinite;
+}
+
+/* Busy warm pulse */
+@keyframes busyWarmPulse{
+  0%,100%{
+    box-shadow:
+      0 0 0 0 rgba(198,96,63,.05),
+      0 8px 22px -16px rgba(166,70,47,.14);
+    filter:saturate(1);
+  }
+  50%{
+    box-shadow:
+      0 0 14px 2px rgba(198,96,63,.12),
+      0 14px 28px -16px rgba(166,70,47,.22);
+    filter:saturate(1.04);
+  }
+}
+.card.state-busy .pill.busy,
+.card.state-busy .status-icon.busy-icon{
+  animation:busyWarmPulse 3.2s ease-in-out infinite;
+}
+
+/* Status transition flash when state changes */
+@keyframes statusStateSwitch{
+  0%{
+    box-shadow:0 0 0 0 rgba(198,162,77,0), var(--shadow-lift);
+    transform:translateY(0);
+  }
+  35%{
+    box-shadow:0 0 0 4px rgba(198,162,77,.13), 0 20px 44px -22px rgba(198,162,77,.22);
+    transform:translateY(-2px);
+  }
+  100%{
+    box-shadow:var(--shadow-lift);
+    transform:translateY(0);
+  }
+}
+.card.state-switch{
+  animation:statusStateSwitch 1.1s cubic-bezier(.22,.61,.36,1);
+}
+
+/* Card entrance */
+@keyframes cardLuxuryEnter{
+  0%{
+    opacity:0;
+    transform:translateY(18px) scale(.985);
+    filter:blur(6px);
+  }
+  100%{
+    opacity:1;
+    transform:translateY(0) scale(1);
+    filter:blur(0);
+  }
+}
+.card.motion-enter{
+  animation:cardLuxuryEnter .72s cubic-bezier(.22,.61,.36,1) both;
+}
+
+/* Progress shimmer */
+@keyframes progressShimmer{
+  0%{ transform:translateX(-130%); opacity:0; }
+  12%{ opacity:.15; }
+  50%{ opacity:.42; }
+  100%{ transform:translateX(180%); opacity:0; }
+}
+.session-progress-bar{
+  position:relative;
+  overflow:hidden;
+}
+.session-progress-bar::before{
+  content:"";
+  position:absolute;
+  inset:-20% auto -20% -40%;
+  width:38%;
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.65), rgba(255,255,255,0));
+  transform:translateX(-120%);
+  animation:progressShimmer 3.4s ease-in-out infinite;
+  pointer-events:none;
+}
+
+/* Imminent next booking highlight */
+@keyframes imminentHalo{
+  0%,100%{
+    box-shadow:0 12px 24px -21px rgba(36,24,17,.52);
+    border-color:rgba(198,162,77,.34);
+  }
+  50%{
+    box-shadow:0 18px 34px -18px rgba(198,162,77,.26);
+    border-color:rgba(198,162,77,.56);
+  }
+}
+@keyframes imminentIconPulse{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.06); }
+}
+.next-box.queue-imminent{
+  animation:imminentHalo 2.4s ease-in-out infinite;
+}
+.next-box.queue-imminent .next-box-icon{
+  animation:imminentIconPulse 2.4s ease-in-out infinite;
+}
+
+/* Clock colon pulse */
+@keyframes colonPulse{
+  0%,48%{ opacity:1; text-shadow:0 0 10px rgba(198,162,77,.26); }
+  50%,100%{ opacity:.28; text-shadow:none; }
+}
+.clock-colon{
+  display:inline-block;
+  animation:colonPulse 1s steps(1,end) infinite;
+}
+
+/* Golden micro-sparkle for logo + title */
+.brand-badge,
+.hero-title-switch{
+  position:relative;
+  overflow:visible;
+}
+@keyframes microSparkle{
+  0%,100%{ opacity:.12; transform:scale(.85); filter:blur(.2px); }
+  50%{ opacity:.75; transform:scale(1.08); filter:blur(0); }
+}
+.brand-badge::before,
+.brand-badge::after,
+.hero-title-switch::before,
+.hero-title-switch::after{
+  content:"";
+  position:absolute;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,248,214,.96) 0%, rgba(231,206,140,.78) 35%, rgba(198,162,77,0) 72%);
+  animation:microSparkle 3.2s ease-in-out infinite;
+  pointer-events:none;
+}
+.brand-badge::before{ top:10px; right:12px; animation-delay:.2s; }
+.brand-badge::after{ bottom:12px; left:12px; animation-delay:1.1s; }
+.hero-title-switch::before{ top:-2px; right:4%; animation-delay:.7s; }
+.hero-title-switch::after{ bottom:-4px; left:6%; animation-delay:1.8s; }
+
+/* Elegant title glow sweep */
+@keyframes heroTitleGlow{
+  0%,100%{ text-shadow:0 0 0 rgba(198,162,77,0); filter:saturate(1); }
+  50%{ text-shadow:0 0 18px rgba(198,162,77,.22); filter:saturate(1.04); }
+}
+.hero-title-switch .title-th,
+.hero-title-switch .title-en{
+  animation:heroTitleGlow 6.8s ease-in-out infinite;
+}
+
+/* Day off fade + float */
+@keyframes dayOffGrace{
+  0%{ opacity:0; transform:translateY(8px); }
+  100%{ opacity:1; transform:translateY(0); }
+}
+.card.state-off .day-off-icon,
+.card.state-off .day-off-title,
+.card.state-off .day-off-sub{
+  animation:dayOffGrace .9s cubic-bezier(.22,.61,.36,1) both;
+}
+.card.state-off .day-off-title{ animation-delay:.06s; }
+.card.state-off .day-off-sub{ animation-delay:.12s; }
+
+/* Slight ambient board drift enhancement */
+.display-fit-shell .board{
+  transition:transform .45s ease;
+}
+
+/* Reduced motion safety */
+@media (prefers-reduced-motion: reduce){
+  .card.motion-enter,
+  .card.state-switch,
+  .card.state-available .pill.available,
+  .card.state-available .status-icon.avail-icon,
+  .card.state-busy .pill.busy,
+  .card.state-busy .status-icon.busy-icon,
+  .session-progress-bar::before,
+  .next-box.queue-imminent,
+  .next-box.queue-imminent .next-box-icon,
+  .clock-colon,
+  .brand-badge::before,
+  .brand-badge::after,
+  .hero-title-switch::before,
+  .hero-title-switch::after,
+  .hero-title-switch .title-th,
+  .hero-title-switch .title-en,
+  .card.state-off .day-off-icon,
+  .card.state-off .day-off-title,
+  .card.state-off .day-off-sub{
+    animation:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1752,6 +2199,7 @@ body.lang-en .customer-info-row{
   <div class="ambient-particles" id="ambientParticles"></div>
 </div>
 
+<div class="display-fit-shell">
 <div class="board">
 
   <!-- Header -->
@@ -1826,6 +2274,7 @@ body.lang-en .customer-info-row{
   </div>
 
 </div>
+</div>
 
 <div class="display-controls" aria-label="Display controls">
   <button class="display-control language-indicator" id="languageControl" type="button" title="สลับภาษา / Switch language">TH</button>
@@ -1842,7 +2291,7 @@ body.lang-en .customer-info-row{
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V5.1 Stable - Formal Available UI",
+  BUILD: "V5.1 Stable - Luxury Motion Pack",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -2574,15 +3023,21 @@ function renderCards(queueList, scheduleMap){
         const subLabel = isBusy
           ? (i === 0 ? languagePair('คิวถัดไป','Next booking') : languagePair('คิวลำดับต่อไป','Upcoming booking'))
           : (i === 0 ? languagePair('ว่างตอนนี้','Open now') : languagePair('ช่วงเวลาว่าง','Open'));
-        const customerInfo = isBusy ? customerInfoMarkup(s.customerName, s.course, s.customerType) : '';
+        const nextCustomerName = isBusy ? escapeHtml(cleanCell(s.customerName) || 'ไม่ระบุ') : '';
+        const nextCourse = isBusy ? escapeHtml(cleanCell(s.course) || 'ไม่ระบุ') : '';
+        const compactInfo = isBusy
+          ? `<div class="next-booking-compact-info">
+               <span class="next-booking-info-item">${languagePair(`ชื่อ: ${nextCustomerName}`, `Name: ${nextCustomerName}`)}</span>
+               <span class="next-booking-info-item">${languagePair(`คอร์ส: ${nextCourse}`, `Course: ${nextCourse}`)}</span>
+             </div>`
+          : '';
 
         return `<div class="next-box ${isBusy ? 'is-booked' : 'is-available'}${i === 0 ? ' next-box-first' : ' next-box-later'}${isBusy ? '' : ' next-box-empty'}${imminent ? ' queue-imminent' : ''}${isFirstRender ? ' slot-enter' : ''}" data-queue-type="${s.type}" data-start="${s.startMin}" data-end="${s.endMin}" style="animation-delay:${i * 90}ms">
             <div class="next-box-icon">${calendarSvg()}</div>
-            <div>
+            <div class="next-box-copy">
               <div class="${cls}"><span class="en">${s.startLabel}-${s.endLabel}</span> · ${label}</div>
-              ${customerInfo}
+              ${compactInfo}
               <div class="next-en">${subLabel}</div>
-              ${isBusy ? `<div class="queue-prep-note">${languagePair('คิวถัดไปกำลังเตรียมห้อง','Preparing the room for the next booking')}</div>` : ''}
             </div>
           </div>`;
       }).join('');
@@ -3277,5 +3732,136 @@ window.setInterval(() => syncNow('interval'), CONFIG.REFRESH_MS);
 </script>
 
 <div id="publicSyncWarning" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  const FIT_MARGIN = 18;
+  let fitRaf = 0;
+
+  function fitQueueDisplay(){
+    cancelAnimationFrame(fitRaf);
+    fitRaf = requestAnimationFrame(() => {
+      const board = document.querySelector('.display-fit-shell .board');
+      if (!board) return;
+
+      // Measure at natural size first.
+      board.style.transform = 'translate(-50%, -50%) scale(1)';
+      const naturalWidth = Math.max(board.scrollWidth, board.offsetWidth, 1);
+      const naturalHeight = Math.max(board.scrollHeight, board.offsetHeight, 1);
+
+      const availableWidth = Math.max(320, window.innerWidth - FIT_MARGIN * 2);
+      const availableHeight = Math.max(240, window.innerHeight - FIT_MARGIN * 2);
+
+      // Never crop: choose the smaller ratio.
+      // Allow a tiny upscale on large displays, but cap it for sharpness.
+      const scale = Math.min(
+        availableWidth / naturalWidth,
+        availableHeight / naturalHeight,
+        1.08
+      );
+
+      board.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(4)})`;
+      document.documentElement.style.setProperty('--queue-fit-scale', scale.toFixed(4));
+    });
+  }
+
+  function setupQueueAutoFit(){
+    fitQueueDisplay();
+
+    window.addEventListener('resize', fitQueueDisplay, {passive:true});
+    window.addEventListener('orientationchange', fitQueueDisplay, {passive:true});
+    document.addEventListener('fullscreenchange', () => setTimeout(fitQueueDisplay, 80));
+
+    // Re-fit whenever queue content changes height (Busy/Available, language, bookings).
+    const board = document.querySelector('.display-fit-shell .board');
+    if (board && 'ResizeObserver' in window){
+      const ro = new ResizeObserver(() => fitQueueDisplay());
+      ro.observe(board);
+    }
+
+    const grid = document.getElementById('cardGrid');
+    if (grid){
+      const mo = new MutationObserver(() => setTimeout(fitQueueDisplay, 30));
+      mo.observe(grid, {childList:true, subtree:true, characterData:true});
+    }
+
+    // Fonts can change dimensions after loading.
+    if (document.fonts?.ready){
+      document.fonts.ready.then(() => fitQueueDisplay()).catch(()=>{});
+    }
+
+    setTimeout(fitQueueDisplay, 300);
+    setTimeout(fitQueueDisplay, 1200);
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setupQueueAutoFit, {once:true});
+  } else {
+    setupQueueAutoFit();
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  function getCardState(card){
+    if (card.classList.contains('state-busy')) return 'busy';
+    if (card.classList.contains('state-available')) return 'available';
+    if (card.classList.contains('state-off')) return 'off';
+    return 'unknown';
+  }
+
+  function animateCards(){
+    const cards = [...document.querySelectorAll('#cardGrid .card')];
+    cards.forEach((card, index) => {
+      const state = getCardState(card);
+      const prev = card.dataset.motionState;
+
+      if (!card.dataset.entered){
+        card.dataset.entered = 'true';
+        card.style.animationDelay = `${index * 120}ms`;
+        card.classList.remove('motion-enter');
+        void card.offsetWidth;
+        card.classList.add('motion-enter');
+      }
+
+      if (prev && prev !== state){
+        card.classList.remove('state-switch');
+        void card.offsetWidth;
+        card.classList.add('state-switch');
+        window.setTimeout(() => card.classList.remove('state-switch'), 1200);
+      }
+
+      card.dataset.motionState = state;
+    });
+  }
+
+  function observeQueueMotions(){
+    const host = document.getElementById('cardGrid');
+    if (!host) return;
+
+    animateCards();
+
+    const mo = new MutationObserver(() => {
+      window.requestAnimationFrame(animateCards);
+    });
+    mo.observe(host, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
+
+    // re-run after sync refreshes / layout changes
+    window.addEventListener('resize', () => window.requestAnimationFrame(animateCards), {passive:true});
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', observeQueueMotions, {once:true});
+  } else {
+    observeQueueMotions();
+  }
+})();
+</script>
+
 </body>
 </html>
