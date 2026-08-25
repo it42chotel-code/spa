@@ -667,6 +667,41 @@ body.spa-debug #spaDebugPanel{display:block}
   .v42-slot-icon{width:26px;height:26px}.v42-slot-time{font-size:10.5px}.v42-slot-sub{font-size:7.5px}
 }
 
+
+/* ===================== V4.3 FAST START ===================== */
+.v22-loading{min-width:210px;text-align:center}
+.v22-loading::before{
+  content:"";
+  display:block;
+  width:18px;height:18px;
+  margin:0 auto 8px;
+  border-radius:50%;
+  border:2px solid rgba(121,88,59,.16);
+  border-top-color:#9a704e;
+  animation:v43Spin .8s linear infinite;
+}
+@keyframes v43Spin{to{transform:rotate(360deg)}}
+
+
+/* ===================== V4.5 DEEP AUDIT FIX ===================== */
+.v42-progress.is-off .v42-progress-track{display:none}
+.v42-progress.is-off .v42-progress-meta strong{color:#6f685f}
+.v42-progress.is-off .v42-dot{background:#8d867d;box-shadow:none}
+
+.v45-startup-status{
+  place-self:center;
+  width:min(560px,76vw);
+  padding:18px 22px;
+  border-radius:18px;
+  background:rgba(255,251,244,.90);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  text-align:center;
+  color:#705945;
+}
+.v45-startup-status strong{display:block;font-size:16px;margin-bottom:4px}
+.v45-startup-status span{font-size:10.5px;opacity:.72}
+
 </style>
 </head>
 <body>
@@ -733,13 +768,15 @@ body.spa-debug #spaDebugPanel{display:block}
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V4.2 Detailed Queue Cards",
+  BUILD: "V4.5 Deep Audit Fix",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
   SCHEDULE_GID: "1985324533",             // exact worksheet from the supplied link
   SETTINGS_TAB: "Settings",              // tab holding shop name / phone etc.
-  REFRESH_MS: 15000,                     // how often to re-check the sheet (ms)
+  REFRESH_MS: 15000,
+  FETCH_TIMEOUT_MS: 4200,
+  CACHE_MAX_AGE_MS: 12 * 60 * 60 * 1000,                     // how often to re-check the sheet (ms)
   OPEN_HOUR: 14,                          // shop opens at 12:00
   QUEUE_START_HOUR: 14,                    // first queue displayed/bookable starts at 14:00
   CLOSE_HOUR: 23,
@@ -913,15 +950,32 @@ function rowsToObjects(rows){
 async function fetchTab(tabName, gid = ''){
   const url = sheetCsvUrl(tabName, gid);
   const sourceLabel = gid ? `${tabName} (gid ${gid})` : tabName;
+
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(
+    () => controller.abort(),
+    CONFIG.FETCH_TIMEOUT_MS || 5500
+  );
+
   let res;
   try{
-    res = await fetch(url, { cache: "no-store" });
+    res = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal
+    });
   } catch (networkErr){
+    if (networkErr?.name === 'AbortError'){
+      throw new Error(`แท็บ "${sourceLabel}" ใช้เวลาตอบกลับเกิน ${(CONFIG.FETCH_TIMEOUT_MS || 5500)/1000} วินาที`);
+    }
     throw new Error(`เชื่อมต่อแท็บ "${sourceLabel}" ไม่ได้ (network/CORS): ${networkErr.message}`);
+  } finally {
+    window.clearTimeout(timeoutId);
   }
+
   if (!res.ok){
     throw new Error(`แท็บ "${sourceLabel}" ตอบกลับ HTTP ${res.status} — ตรวจสอบว่าแชร์ "ทุกคนที่มีลิงก์ ดูได้" แล้ว`);
   }
+
   const csvText = await res.text();
   if (/^\s*<!DOCTYPE html/i.test(csvText) || /accounts\.google\.com/i.test(csvText)){
     throw new Error(`แท็บ "${sourceLabel}" ไม่คืนค่าเป็น CSV (อาจยังไม่ได้แชร์แบบสาธารณะ หรือระบุแท็บไม่ตรง)`);
@@ -1446,7 +1500,7 @@ function renderCards(queueList, scheduleMap){
         currentLabelTh:'ว่าง',currentLabelEn:'Available',
         currentSubTh:nextBusy?.startLabel ? `รับ Walk-in ได้ถึง ${nextBusy.startLabel} น.` : `พร้อมให้บริการถึง ${until} น.`,
         currentSubEn:nextBusy?.startLabel ? `Walk-in until ${nextBusy.startLabel}` : `Available until ${until}`,
-        currentStart:now,
+        currentStart:view.availableStartMin ?? now,
         currentEnd:view.availableEndMin || closeMin,
         nextSlots:view.nextThree || []
       });
@@ -1515,8 +1569,9 @@ function detailedTherapistCard({
 
     const busy = slot.type === 'busy';
     const label = `${slot.startLabel || '--:--'}–${slot.endLabel || '--:--'}`;
-    const detailTh = busy ? (slot.customer ? escapeHtml(slot.customer) : 'ไม่ว่าง') : 'ช่วงเวลาว่าง';
-    const detailEn = busy ? (slot.customer ? escapeHtml(slot.customer) : 'Busy') : 'Available';
+    const slotCustomer = slot.customerName || slot.customer || '';
+    const detailTh = busy ? (slotCustomer ? escapeHtml(slotCustomer) : 'ไม่ว่าง') : 'ช่วงเวลาว่าง';
+    const detailEn = busy ? (slotCustomer ? escapeHtml(slotCustomer) : 'Busy') : 'Available';
 
     return `<div class="v42-slot ${busy ? 'busy' : 'available'}">
       <div class="v42-slot-icon">${calendarMiniSvg()}</div>
@@ -1543,7 +1598,7 @@ function detailedTherapistCard({
       <div class="v42-current-top">
         <div class="v42-current-icon">${stateIcon}</div>
         <div class="v42-current-copy">
-          <div class="v42-current-time">${languagePair('คิวปัจจุบัน','Current queue')} <span>(${formatMinutes(now)} น.)</span></div>
+          <div class="v42-current-time">${languagePair('คิวปัจจุบัน','Current queue')} <span>(${minutesToLabel(now)} น.)</span></div>
           <div class="v42-current-state">${languagePair(statusTh,statusEn)}</div>
         </div>
       </div>
@@ -1554,7 +1609,7 @@ function detailedTherapistCard({
           <strong>${languagePair(statusTh,statusEn)}</strong>
         </div>
         <div class="v42-info-row">
-          <span>${languagePair('คิวถัดไป','Next')}</span>
+          <span>${languagePair(state === 'busy' ? 'ลูกค้า' : 'สถานะตอนนี้',state === 'busy' ? 'Guest' : 'Now')}</span>
           <strong>${languagePair(currentLabelTh,currentLabelEn)}</strong>
         </div>
         <div class="v42-info-row">
@@ -1564,7 +1619,7 @@ function detailedTherapistCard({
       </div>
     </div>
 
-    <div class="v42-progress">
+    <div class="v42-progress ${state === 'off' ? 'is-off' : ''}">
       <div class="v42-progress-meta">
         <span class="v42-dot"></span>
         <span>${languagePair('เวลาคิวคงเหลือ','Queue time remaining')}</span>
@@ -1696,6 +1751,58 @@ function validateCurrentBusyRows(scheduleRows, scheduleMap){
 
 // Regression test for the exact case that previously failed:
 // Therapist 2, explicit booking 14:30–17:30 must be Busy at 14:52.
+
+
+function runDetailedCardSelfTest(){
+  try{
+    const html = detailedTherapistCard({
+      id:'2',
+      nameTh:'ทดสอบ',
+      nameEn:'Test',
+      photo:avatarSvg(),
+      state:'busy',
+      statusTh:'ไม่ว่าง',
+      statusEn:'Busy',
+      currentLabelTh:'ลูกค้าทดสอบ',
+      currentLabelEn:'Test Guest',
+      currentSubTh:'นวดไทย • ถึง 17:30 น.',
+      currentSubEn:'Thai Massage • until 17:30',
+      currentStart:14*60+30,
+      currentEnd:17*60+30,
+      nextSlots:[
+        {type:'busy',startLabel:'15:00',endLabel:'16:00',customerName:'ลูกค้าทดสอบ'},
+        {type:'available',startLabel:'17:30',endLabel:'18:30'},
+        {type:'available',startLabel:'18:30',endLabel:'19:30'}
+      ]
+    });
+
+    const pass =
+      typeof html === 'string' &&
+      html.includes('v42-card') &&
+      html.includes('17:30') &&
+      html.includes('ลูกค้าทดสอบ');
+
+    if (!pass) throw new Error('Detailed queue card output incomplete');
+    console.info('[Spa Queue SELF-TEST PASS] detailed queue card renderer');
+    return true;
+  }catch(error){
+    console.error('[Spa Queue SELF-TEST FAILED] detailed queue card renderer', error);
+    return false;
+  }
+}
+
+function runRendererSelfTest(){
+  try{
+    const sample = minutesToLabel(14 * 60 + 58);
+    if (sample !== '14:58') throw new Error(`minutesToLabel returned ${sample}`);
+    console.info('[Spa Queue SELF-TEST PASS] renderer time formatter available');
+    return true;
+  }catch(error){
+    console.error('[Spa Queue SELF-TEST FAILED] renderer time formatter', error);
+    return false;
+  }
+}
+
 function runBookingParserSelfTest(){
   const synthetic = [{
     Therapist_ID:'2',
@@ -1719,6 +1826,102 @@ function runBookingParserSelfTest(){
   return pass;
 }
 
+
+
+function ensureTherapistIdentityRows(queueRows, scheduleRows){
+  const existing = Array.isArray(queueRows) ? queueRows.filter(Boolean) : [];
+  const ids = [...new Set(
+    (scheduleRows || [])
+      .map(r => normalizeTherapistId(fieldByNameOrPosition(r, 'Therapist_ID', 0)))
+      .filter(Boolean)
+  )].sort((a,b) => Number(a) - Number(b));
+
+  const byId = new Map();
+  for (const row of existing){
+    const id = normalizeTherapistId(row.ID || row.Therapist_ID || fieldByNameOrPosition(row, 'ID', 0));
+    if (id) byId.set(id, row);
+  }
+
+  for (const id of ids){
+    if (!byId.has(id)){
+      byId.set(id, {
+        ID:id,
+        Therapist_ID:id,
+        Name_TH:`หมอนวด ${id}`,
+        Name_EN:`Therapist ${id}`,
+        Photo_URL:'',
+        Working_Today:'ทำงาน'
+      });
+    }
+  }
+
+  // The board is designed for three therapists; if schedule temporarily returns none,
+  // keep the screen usable instead of leaving a loading state.
+  if (!byId.size){
+    ['1','2','3'].forEach(id => byId.set(id,{
+      ID:id,Therapist_ID:id,Name_TH:`หมอนวด ${id}`,Name_EN:`Therapist ${id}`,
+      Photo_URL:'',Working_Today:'ทำงาน'
+    }));
+  }
+
+  return [...byId.values()].sort((a,b) => {
+    const ai = Number(normalizeTherapistId(a.ID || a.Therapist_ID));
+    const bi = Number(normalizeTherapistId(b.ID || b.Therapist_ID));
+    return (Number.isFinite(ai) ? ai : 999) - (Number.isFinite(bi) ? bi : 999);
+  });
+}
+
+const SPA_CACHE_KEY = 'spa_queue_v43_cache';
+
+function saveSpaCache(queue, scheduleRows){
+  try{
+    localStorage.setItem(SPA_CACHE_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      queue,
+      scheduleRows
+    }));
+  }catch(error){
+    console.warn('[Spa Queue] cache save skipped', error);
+  }
+}
+
+function loadSpaCache(){
+  try{
+    const raw = localStorage.getItem(SPA_CACHE_KEY);
+    if (!raw) return null;
+
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.queue) || !Array.isArray(data.scheduleRows)) return null;
+
+    const age = Date.now() - Number(data.savedAt || 0);
+    if (age < 0 || age > (CONFIG.CACHE_MAX_AGE_MS || 43200000)) return null;
+
+    return {...data, age};
+  }catch(error){
+    console.warn('[Spa Queue] cache read skipped', error);
+    return null;
+  }
+}
+
+function renderCachedDataImmediately(){
+  const cached = loadSpaCache();
+  if (!cached) return false;
+
+  try{
+    const scheduleMap = buildScheduleMap(cached.scheduleRows);
+    lastGoodQueue = cached.queue;
+    lastGoodScheduleMap = scheduleMap;
+    renderCards(cached.queue, scheduleMap);
+
+    const minutesOld = Math.max(0, Math.round(cached.age / 60000));
+    console.info(`[Spa Queue] instant cache rendered (${minutesOld} min old)`);
+    return true;
+  }catch(error){
+    console.warn('[Spa Queue] cached render failed', error);
+    return false;
+  }
+}
+
 /* ---------------- Sync loop ---------------- */
 function scoreScheduleSource(rows, sourceLabel){
   const list = rows || [];
@@ -1729,8 +1932,6 @@ function scoreScheduleSource(rows, sourceLabel){
   let busyRows = 0;
   let explicitRows = 0;
   let usableRows = 0;
-  let idRows = 0;
-  let timeRows = 0;
 
   for (const r of list){
     const id = normalizeTherapistId(fieldByNameOrPosition(r, 'Therapist_ID', 0));
@@ -1739,82 +1940,42 @@ function scoreScheduleSource(rows, sourceLabel){
     const start = fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11);
     const end = fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12);
 
-    if (id) idRows++;
-    if (parseExactTime(slot) !== null) timeRows++;
     if (id && parseExactTime(slot) !== null) usableRows++;
     if (isBusyStatus(status)) busyRows++;
     if (parseExactTime(start) !== null || parseExactTime(end) !== null) explicitRows++;
   }
 
-  // Busy and exact-time data are weighted heavily. This makes the display prefer
-  // the worksheet that actually contains today's live queue, not merely a valid old grid.
-  const score =
-      usableRows * 2
-    + idRows
-    + timeRows
-    + busyRows * 120
-    + explicitRows * 55;
-
+  const score = usableRows * 2 + busyRows * 120 + explicitRows * 55;
   return {score, rows:list, sourceLabel, busyRows, explicitRows, usableRows};
 }
 
 async function fetchScheduleRows(){
-  const sources = [
-    {
-      label:`${CONFIG.SCHEDULE_TAB} (gid ${CONFIG.SCHEDULE_GID})`,
-      fetch:() => fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID)
-    },
-    {
-      label:`${CONFIG.SCHEDULE_TAB} (by name)`,
-      fetch:() => fetchTab(CONFIG.SCHEDULE_TAB)
+  // GID is the exact worksheet identity and is stable even if the tab is renamed.
+  try{
+    const gidRows = await fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID);
+    const gidStats = scoreScheduleSource(gidRows, `${CONFIG.SCHEDULE_TAB} (gid ${CONFIG.SCHEDULE_GID})`);
+
+    if (gidStats.usableRows > 0){
+      window.__SPA_SCHEDULE_SOURCE__ = gidStats.sourceLabel;
+      window.__SPA_SCHEDULE_SOURCE_STATS__ = gidStats;
+      return gidRows;
     }
-  ];
 
-  const results = await Promise.all(sources.map(async source => {
-    try{
-      const rows = await source.fetch();
-      return {...scoreScheduleSource(rows, source.label), error:null};
-    }catch(error){
-      return {...scoreScheduleSource([], source.label), error};
-    }
-  }));
-
-  const successful = results
-    .filter(r => !r.error)
-    .sort((a,b) => b.score - a.score);
-
-  if (!successful.length){
-    const details = results
-      .map(r => `${r.sourceLabel}: ${r.error?.message || 'ไม่พบข้อมูล'}`)
-      .join(' | ');
-    throw new Error(`อ่านตารางคิวไม่ได้ทุกแหล่ง: ${details}`);
+    console.warn('[Spa Queue] GID schedule returned no usable rows; trying tab name fallback');
+  }catch(error){
+    console.warn('[Spa Queue] GID schedule failed; trying tab name fallback', error);
   }
 
-  const chosen = successful[0];
-  console.info('[Spa Queue] schedule source selected', {
-    source: chosen.sourceLabel,
-    score: chosen.score,
-    rows: chosen.rows.length,
-    busyRows: chosen.busyRows,
-    explicitRows: chosen.explicitRows,
-    alternatives: successful.slice(1).map(s => ({
-      source:s.sourceLabel,
-      score:s.score,
-      rows:s.rows.length,
-      busyRows:s.busyRows,
-      explicitRows:s.explicitRows
-    }))
-  });
+  const nameRows = await fetchTab(CONFIG.SCHEDULE_TAB);
+  const nameStats = scoreScheduleSource(nameRows, `${CONFIG.SCHEDULE_TAB} (by name)`);
 
-  window.__SPA_SCHEDULE_SOURCE__ = chosen.sourceLabel;
-  window.__SPA_SCHEDULE_SOURCE_STATS__ = {
-    rows:chosen.rows.length,
-    busyRows:chosen.busyRows,
-    explicitRows:chosen.explicitRows,
-    score:chosen.score
-  };
+  if (nameStats.usableRows <= 0){
+    throw new Error(`ไม่พบข้อมูลคิวที่ใช้งานได้ในแท็บ "${CONFIG.SCHEDULE_TAB}"`);
+  }
 
-  return chosen.rows;
+  window.__SPA_SCHEDULE_SOURCE__ = nameStats.sourceLabel;
+  window.__SPA_SCHEDULE_SOURCE_STATS__ = nameStats;
+  return nameRows;
 }
 
 let lastGoodQueue = null;
@@ -1924,11 +2085,15 @@ async function syncNow(reason = 'interval'){
   if (syncInFlight) return;
   syncInFlight = true;
   try{
-    const [queue, scheduleRows, settings] = await Promise.all([
-      fetchTab(CONFIG.QUEUE_TAB),
-      fetchScheduleRows(),
-      fetchTab(CONFIG.SETTINGS_TAB).catch(() => [])
-    ]);
+    // Schedule is critical. Therapist identity is optional and must never block live status.
+    const schedulePromise = fetchScheduleRows();
+    const queuePromise = fetchTab(CONFIG.QUEUE_TAB).catch(error => {
+      console.warn('[Spa Queue] Queue identity unavailable; using fallback identities', error);
+      return lastGoodQueue || [];
+    });
+
+    const [scheduleRows, queueRaw] = await Promise.all([schedulePromise, queuePromise]);
+    const queue = ensureTherapistIdentityRows(queueRaw, scheduleRows);
     const scheduleMap = buildScheduleMap(scheduleRows);
     validateScheduleRuntime(scheduleRows, scheduleMap);
     const currentBusySanityOk = validateCurrentBusyRows(scheduleRows, scheduleMap);
@@ -1952,8 +2117,27 @@ async function syncNow(reason = 'interval'){
     };
     recoveryReloadScheduled = false;
 
-    renderCards(queue, scheduleMap);
-    if (settings.length) applySettings(settings);
+    saveSpaCache(queue, scheduleRows);
+    try{
+      renderCards(queue, scheduleMap);
+    }catch(renderError){
+      console.error('[Spa Queue Render Error]', renderError);
+      const scene = document.getElementById('displayScene');
+      if (scene){
+        scene.className = 'v22-scene v22-message-scene';
+        scene.innerHTML = `<div class="v22-message-card">
+          <div class="v22-message-icon">!</div>
+          <div class="v22-message-title">เกิดข้อผิดพลาดในการแสดงผลคิว</div>
+          <div class="v22-message-sub">ระบบเชื่อมต่อข้อมูลแล้ว แต่หน้าจอแสดงผลมีปัญหา กรุณาติดต่อ Front Reception</div>
+        </div>`;
+      }
+      throw renderError;
+    }
+
+    // Settings are non-critical and load in background after the queue is visible.
+    fetchTab(CONFIG.SETTINGS_TAB)
+      .then(settings => { if (settings.length) applySettings(settings); })
+      .catch(() => {});
     document.body.classList.remove('sync-success');
     void document.body.offsetWidth;
     document.body.classList.add('sync-success');
@@ -1973,7 +2157,13 @@ async function syncNow(reason = 'interval'){
     lastSyncError = err;
     console.error('[Spa Queue Sync Error]', err);
     setPublicSyncWarning('ข้อมูลคิวอาจไม่เป็นปัจจุบัน กรุณาติดต่อ Front Reception');
-    if (lastGoodQueue) renderCards(lastGoodQueue, lastGoodScheduleMap || {});
+    if (lastGoodQueue){
+      try{
+        renderCards(lastGoodQueue, lastGoodScheduleMap || {});
+      }catch(fallbackRenderError){
+        console.error('[Spa Queue Fallback Render Error]', fallbackRenderError);
+      }
+    }
     scheduleRecoveryReload();
   } finally {
     syncInFlight = false;
@@ -2433,6 +2623,9 @@ window.setInterval(tickClock, 1000);
 window.setInterval(updateAtmosphere, 60000);
 window.setInterval(updateSessionProgress, 15000);
 runBookingParserSelfTest();
+runRendererSelfTest();
+runDetailedCardSelfTest();
+renderCachedDataImmediately();
 syncNow('initial');
 window.setInterval(() => syncNow('interval'), CONFIG.REFRESH_MS);
 </script>
@@ -2573,5 +2766,35 @@ if (new URLSearchParams(location.search).get('debug') === '1'){
 }
 
 </script>
+
+
+<script>
+(function(){
+  window.setTimeout(() => {
+    const scene = document.getElementById('displayScene');
+    if (!scene) return;
+    if (scene.querySelector('.v22-loading')){
+      scene.innerHTML = `<div class="v45-startup-status">
+        <strong>กำลังเชื่อมต่อข้อมูลคิว…</strong>
+        <span>ระบบกำลังตรวจสอบ Google Sheets และข้อมูลสำรอง</span>
+      </div>`;
+    }
+  }, 3500);
+
+  window.setTimeout(() => {
+    const scene = document.getElementById('displayScene');
+    if (!scene) return;
+    if (scene.querySelector('.v22-loading') || scene.querySelector('.v45-startup-status')){
+      scene.className = 'v22-scene v22-message-scene';
+      scene.innerHTML = `<div class="v22-message-card">
+        <div class="v22-message-icon">!</div>
+        <div class="v22-message-title">ไม่สามารถเชื่อมต่อข้อมูลคิวได้</div>
+        <div class="v22-message-sub">ระบบหยุดรอแล้วเพื่อไม่ให้หน้าจอค้าง กรุณาเปิด URL ด้วย ?debug=1 เพื่อตรวจสอบรายละเอียด</div>
+      </div>`;
+    }
+  }, 9000);
+})();
+</script>
+
 </body>
 </html>
