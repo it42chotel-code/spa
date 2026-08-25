@@ -762,6 +762,23 @@ body.spa-debug #spaDebugPanel{display:block}
   .v42-slot-sub{font-size:8.5px!important}
 }
 
+
+/* ===================== V4.7 CURRENT QUEUE EMPHASIS ===================== */
+.v42-current-time{font-size:11.5px!important}
+.v42-current-state{font-size:28px!important}
+.v42-info-row{font-size:11px!important}
+.v42-info-row strong{font-size:11.4px!important}
+.v42-slot-time{font-size:16px!important}
+.v42-slot-sub{font-size:10.5px!important}
+.state-busy .v42-current{
+  border-color:rgba(172,91,68,.18)!important;
+  background:rgba(252,242,238,.72)!important;
+}
+@media(max-width:1180px),(max-height:720px){
+  .v42-current-state{font-size:22px!important}
+  .v42-slot-time{font-size:13px!important}
+}
+
 </style>
 </head>
 <body>
@@ -828,7 +845,7 @@ body.spa-debug #spaDebugPanel{display:block}
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V4.6 Verified Live Schedule",
+  BUILD: "V4.7 Parser Failsafe + Verified Busy",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -1047,26 +1064,62 @@ async function fetchTab(tabName, gid = ''){
 
 // Flexible time parser for Google Sheets CSV values.
 // Supports 18:00, 18:00:00, 18.00, 6:00 PM, and fractional days such as 0.75.
-function parseExactTime(value){
-  const s = cleanCell(value);
-  if (!s) return null;
+function normalizeThaiDigits(value){
+  return String(value ?? '').replace(/[๐-๙]/g, ch => '0123456789'['๐๑๒๓๔๕๖๗๘๙'.indexOf(ch)]);
+}
 
-  if (/^(?:0(?:\.\d+)?|1(?:\.0+)?)$/.test(s)){
-    const fraction = Number(s);
-    if (Number.isFinite(fraction)) return Math.round((fraction % 1) * 1440) % 1440;
+function parseExactTime(value){
+  if (value === null || value === undefined || value === '') return null;
+
+  if (typeof value === 'number' && Number.isFinite(value)){
+    const fraction = ((value % 1) + 1) % 1;
+    if (fraction > 0 || value === 0 || value === 1){
+      return Math.round(fraction * 1440) % 1440;
+    }
   }
 
-  const m = /(\d{1,2})\s*[:.]\s*(\d{2})/.exec(s);
-  if (!m) return null;
-  let h = parseInt(m[1], 10);
-  const mm = parseInt(m[2], 10);
-  const meridiem = /\b(p\.?m\.?)\b/i.test(s) ? 'pm'
-    : (/\b(a\.?m\.?)\b/i.test(s) ? 'am' : '');
+  let s = normalizeThaiDigits(cleanCell(value));
+  if (!s) return null;
 
-  if (meridiem === 'pm' && h < 12) h += 12;
-  if (meridiem === 'am' && h === 12) h = 0;
-  if (h > 23 || mm > 59) return null;
-  return h * 60 + mm;
+  if (/^[+-]?\d+(?:\.\d+)?$/.test(s)){
+    const numeric = Number(s);
+    if (Number.isFinite(numeric)){
+      const fraction = ((numeric % 1) + 1) % 1;
+      if (fraction > 0 || numeric === 0 || numeric === 1){
+        return Math.round(fraction * 1440) % 1440;
+      }
+      if (Number.isInteger(numeric) && numeric >= 0 && numeric <= 23){
+        return numeric * 60;
+      }
+    }
+  }
+
+  const timeMatch = /(?:^|[^\d])(\d{1,2})\s*[:.]\s*(\d{2})(?:\s*[:.]\s*\d{2})?(?!\d)/.exec(s);
+  if (timeMatch){
+    let h = parseInt(timeMatch[1], 10);
+    const mm = parseInt(timeMatch[2], 10);
+    const meridiem = /\b(p\.?\s*m\.?)\b/i.test(s) ? 'pm'
+      : (/\b(a\.?\s*m\.?)\b/i.test(s) ? 'am' : '');
+
+    if (meridiem === 'pm' && h < 12) h += 12;
+    if (meridiem === 'am' && h === 12) h = 0;
+    if (h >= 0 && h <= 23 && mm >= 0 && mm <= 59) return h * 60 + mm;
+  }
+
+  const thaiTime = /(\d{1,2})\s*(?:นาฬิกา|โมง)\s*(\d{1,2})?\s*(?:นาที)?/.exec(s);
+  if (thaiTime){
+    const h = parseInt(thaiTime[1], 10);
+    const mm = parseInt(thaiTime[2] || '0', 10);
+    if (h >= 0 && h <= 23 && mm >= 0 && mm <= 59) return h * 60 + mm;
+  }
+
+  const parsedMs = Date.parse(s);
+  if (Number.isFinite(parsedMs)){
+    const d = new Date(parsedMs);
+    if (!Number.isNaN(d.getTime())) return d.getHours() * 60 + d.getMinutes();
+  }
+
+  return null;
 }
 
 function isBusyStatus(statusRaw){
@@ -1095,6 +1148,110 @@ function parseDurationMinutes(value){
   const n = Number(s);
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.round(n * 60);
+}
+
+function buildBusyFallbackMap(rows){
+  const map = {};
+  const closeMin = CONFIG.CLOSE_HOUR * 60;
+
+  for (const [rowIndex, r] of (rows || []).entries()){
+    try{
+      const status = fieldByNameOrPosition(r, 'Status', 2);
+      if (!isBusyStatus(status)) continue;
+
+      const therapistId = normalizeTherapistId(fieldByNameOrPosition(r, 'Therapist_ID', 0));
+      if (!therapistId) continue;
+
+      const slotRaw = fieldByNameOrPosition(r, 'Time_Slot', 1);
+      const exactStartRaw = fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11);
+      const exactEndRaw = fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12);
+      const durationRaw = fieldByNameOrPosition(r, 'ชั่วโมง', 7);
+
+      let start = parseExactTime(exactStartRaw);
+      if (!Number.isFinite(start)) start = parseExactTime(slotRaw);
+
+      if (!Number.isFinite(start)){
+        console.error('[Spa Queue] fallback cannot parse busy start', {
+          rowIndex, therapistId, slotRaw, exactStartRaw, row:r
+        });
+        continue;
+      }
+
+      let end = parseExactTime(exactEndRaw);
+      if (!Number.isFinite(end)){
+        const durationMin = parseDurationMinutes(durationRaw);
+        end = start + (durationMin || 60);
+      }
+
+      if (!Number.isFinite(end) || end <= start) end = start + 60;
+      if (start >= closeMin) continue;
+      end = Math.min(end, closeMin);
+
+      const customer = fieldByNameOrPosition(r, 'Customer_Note', 3) || '';
+      const course = fieldByNameOrPosition(r, 'คอร์สการนวด', 6) || '';
+      const room = fieldByNameOrPosition(r, 'ห้อง', 4) || '';
+      const customerType = fieldByNameOrPosition(r, 'ประเภทลูกค้า', 9) || '';
+
+      const item = {
+        therapistId,
+        startMin:start,
+        endMin:end,
+        startLabel:minutesToLabel(start),
+        endLabel:minutesToLabel(end),
+        hasExplicitStart:Number.isFinite(parseExactTime(exactStartRaw)),
+        hasExplicitEnd:Number.isFinite(parseExactTime(exactEndRaw)),
+        customer:String(customer || '').trim(),
+        customerName:String(customer || '').trim(),
+        course:String(course || '').trim(),
+        room:String(room || '').trim(),
+        customerType:String(customerType || '').trim(),
+        note:[customer, room ? `ห้อง ${room}` : '', course, customerType].filter(Boolean).join(' · '),
+        rowIndex
+      };
+
+      (map[therapistId] ||= []).push(item);
+    }catch(error){
+      console.error('[Spa Queue] fallback row parser error', rowIndex, error);
+    }
+  }
+
+  for (const id of Object.keys(map)){
+    const list = map[id].sort((a,b) => a.startMin - b.startMin || a.endMin - b.endMin);
+    const merged = [];
+
+    for (const item of list){
+      const prev = merged[merged.length - 1];
+      if (!prev || item.startMin > prev.endMin){
+        merged.push({...item});
+        continue;
+      }
+
+      if (item.hasExplicitEnd){
+        prev.endMin = item.endMin;
+        prev.endLabel = item.endLabel;
+        prev.hasExplicitEnd = true;
+      }else if (!prev.hasExplicitEnd){
+        prev.endMin = Math.max(prev.endMin, item.endMin);
+        prev.endLabel = minutesToLabel(prev.endMin);
+      }
+
+      if (item.hasExplicitStart && !prev.hasExplicitStart){
+        prev.startMin = item.startMin;
+        prev.startLabel = item.startLabel;
+        prev.hasExplicitStart = true;
+      }
+
+      if (!prev.customerName && item.customerName) prev.customerName = item.customerName;
+      if (!prev.customer && item.customer) prev.customer = item.customer;
+      if (!prev.course && item.course) prev.course = item.course;
+      if (!prev.room && item.room) prev.room = item.room;
+      if (!prev.customerType && item.customerType) prev.customerType = item.customerType;
+    }
+
+    map[id] = merged;
+  }
+
+  return map;
 }
 
 function buildScheduleMap(rows){
@@ -1780,6 +1937,64 @@ function countActiveBookings(scheduleMap, atMin = nowMinutes()){
   return count;
 }
 
+function runTimeParserSelfTests(){
+  const tests = [
+    ['14:30', 870],
+    ['14:30:00', 870],
+    ['2:30 PM', 870],
+    ['๑๔:๓๐', 870],
+    ['0.6041666667', 870],
+    ['46260.6041666667', 870],
+    ['1899-12-30 14:30:00', 870]
+  ];
+
+  const failures = tests
+    .map(([input, expected]) => ({input, expected, actual:parseExactTime(input)}))
+    .filter(t => t.actual !== t.expected);
+
+  if (failures.length){
+    console.error('[Spa Queue SELF-TEST FAILED] time parser', failures);
+    return false;
+  }
+  console.info('[Spa Queue SELF-TEST PASS] all Google Sheets time formats');
+  return true;
+}
+
+function runFallbackBusySelfTest(){
+  const rows = [
+    {
+      Therapist_ID:'2',
+      Time_Slot:'14:00',
+      Status:'ไม่ว่าง',
+      Customer_Note:'คุณสุภาวดี',
+      ชั่วโมง:'2.5',
+      'เวลาเริ่มจริง':'46260.6041666667',
+      'เวลาสิ้นสุดจริง':'46260.7291666667'
+    },
+    {Therapist_ID:'2', Time_Slot:'15:00', Status:'ไม่ว่าง'},
+    {Therapist_ID:'2', Time_Slot:'16:00', Status:'ไม่ว่าง'},
+    {Therapist_ID:'2', Time_Slot:'17:00', Status:'ไม่ว่าง'}
+  ];
+
+  const map = buildBusyFallbackMap(rows);
+  const current = map['2']?.find(b => 15*60+40 >= b.startMin && 15*60+40 < b.endMin);
+
+  const pass = Boolean(
+    current &&
+    current.startMin === 14*60+30 &&
+    current.endMin === 17*60+30 &&
+    current.customerName === 'คุณสุภาวดี'
+  );
+
+  if (!pass){
+    console.error('[Spa Queue SELF-TEST FAILED] fallback busy parser', map);
+    return false;
+  }
+
+  console.info('[Spa Queue SELF-TEST PASS] fallback Therapist 2 Busy 14:30–17:30');
+  return true;
+}
+
 function runLiveSelectionSelfTest(){
   // Simulates the exact real-world failure we are fixing:
   // stale source = all free, live source = therapist 2 busy 14:30–17:30.
@@ -2286,11 +2501,34 @@ async function syncNow(reason = 'interval'){
 
     const [scheduleRows, queueRaw] = await Promise.all([schedulePromise, queuePromise]);
     const queue = ensureTherapistIdentityRows(queueRaw, scheduleRows);
-    const scheduleMap = buildScheduleMap(scheduleRows);
-    validateScheduleRuntime(scheduleRows, scheduleMap);
-    const currentBusySanityOk = validateCurrentBusyRows(scheduleRows, scheduleMap);
-    const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
+    let scheduleMap = buildScheduleMap(scheduleRows);
+    let bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
     const busyRowCount = scheduleRows.filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2))).length;
+    let currentBusySanityOk = validateCurrentBusyRows(scheduleRows, scheduleMap);
+    let usedFallbackParser = false;
+
+    if (busyRowCount > 0 && (bookingCount === 0 || !currentBusySanityOk)){
+      const fallbackMap = buildBusyFallbackMap(scheduleRows);
+      const fallbackCount = Object.values(fallbackMap).reduce((sum, list) => sum + list.length, 0);
+      const fallbackSanityOk = validateCurrentBusyRows(scheduleRows, fallbackMap);
+
+      console.warn('[Spa Queue] activating busy-row fallback parser', {
+        busyRowCount,
+        normalBookingCount:bookingCount,
+        fallbackBookingCount:fallbackCount,
+        normalSanity:currentBusySanityOk,
+        fallbackSanity:fallbackSanityOk
+      });
+
+      if (fallbackCount > 0){
+        scheduleMap = fallbackMap;
+        bookingCount = fallbackCount;
+        currentBusySanityOk = fallbackSanityOk;
+        usedFallbackParser = true;
+      }
+    }
+
+    validateScheduleRuntime(scheduleRows, scheduleMap);
 
     lastGoodQueue = queue;
     lastGoodScheduleMap = scheduleMap;
@@ -2305,7 +2543,8 @@ async function syncNow(reason = 'interval'){
       reason,
       source:window.__SPA_SCHEDULE_SOURCE__ || CONFIG.SCHEDULE_TAB,
       explicitRows:window.__SPA_SCHEDULE_SOURCE_STATS__?.explicitRows || 0,
-      currentBusySanityOk
+      currentBusySanityOk,
+      usedFallbackParser
     };
     recoveryReloadScheduled = false;
 
@@ -2817,6 +3056,8 @@ window.setInterval(updateSessionProgress, 15000);
 runBookingParserSelfTest();
 runRendererSelfTest();
 runDetailedCardSelfTest();
+runTimeParserSelfTests();
+runFallbackBusySelfTest();
 runLiveSelectionSelfTest();
 renderCachedDataImmediately();
 syncNow('initial');
@@ -2954,7 +3195,7 @@ function updateSpaDebugPanel(){
     .join(' || ');
 
   panel.textContent =
-    `BUILD ${CONFIG.BUILD} | chosen: ${s.source || '-'} | rows: ${s.rows ?? '-'} | busy: ${s.busyRows ?? '-'} | bookings: ${s.bookings ?? '-'} | explicit: ${s.explicitRows ?? '-'} | current-check: ${s.currentBusySanityOk ?? '-'} | candidates: ${candidates || '-'} | error: ${lastSyncError?.message || '-'}`;
+    `BUILD ${CONFIG.BUILD} | chosen: ${s.source || '-'} | rows: ${s.rows ?? '-'} | busy: ${s.busyRows ?? '-'} | bookings: ${s.bookings ?? '-'} | explicit: ${s.explicitRows ?? '-'} | current-check: ${s.currentBusySanityOk ?? '-'} | fallback-parser: ${s.usedFallbackParser ?? false} | candidates: ${candidates || '-'} | error: ${lastSyncError?.message || '-'}`;
 }
 
 if (new URLSearchParams(location.search).get('debug') === '1'){
