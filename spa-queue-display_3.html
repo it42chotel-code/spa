@@ -557,6 +557,116 @@ body.motion-paused .v22-icon{animation-play-state:paused!important}
 }
 body.spa-debug #spaDebugPanel{display:block}
 
+
+/* ===================== V4.2 DETAILED QUEUE CARDS ===================== */
+.v22-open{align-items:stretch}
+.v42-grid{min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.v42-card{
+  min-height:0;display:grid;grid-template-rows:72px 168px 62px 24px minmax(0,1fr);
+  overflow:hidden;border-radius:20px;background:rgba(255,251,244,.93);
+  border:1px solid var(--line);box-shadow:0 18px 48px -32px rgba(70,43,26,.40);
+  backdrop-filter:blur(10px) saturate(1.02)
+}
+.v42-head{
+  display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:9px;
+  padding:9px 11px;background:linear-gradient(135deg,#654630,#77533b);color:#fff
+}
+.v42-head .v22-avatar{width:44px;height:44px}
+.v42-person{min-width:0}
+.v42-name-th{font-size:16px;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v42-name-en{margin-top:2px;font:9px var(--font-en);color:#dfc98e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v42-badge{padding:6px 8px;border-radius:999px;background:#f4ede4;color:#654a35;font-size:9px;font-weight:800;white-space:nowrap}
+.state-available .v42-badge{background:var(--green-bg);color:var(--green)}
+.state-busy .v42-badge{background:var(--red-bg);color:var(--red)}
+.state-off .v42-badge{background:var(--off-bg);color:#6c655e}
+
+.v42-current{
+  margin:10px 10px 0;padding:11px 12px 10px;border-radius:15px;
+  border:1px solid rgba(89,62,42,.08);background:rgba(255,255,255,.50)
+}
+.v42-current-top{display:grid;grid-template-columns:38px minmax(0,1fr);gap:9px;align-items:center}
+.v42-current-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#ecf1e8;color:var(--green)}
+.state-busy .v42-current-icon{background:var(--red-bg);color:var(--red)}
+.state-off .v42-current-icon{background:var(--off-bg);color:#6f675e}
+.v42-current-icon svg{width:19px;height:19px}
+.v42-current-time{font-size:9px;color:#897563}
+.v42-current-time span{font-family:var(--font-en)}
+.v42-current-state{margin-top:1px;font-size:19px;font-weight:800;line-height:1.05;color:var(--green)}
+.state-busy .v42-current-state{color:var(--red)}
+.state-off .v42-current-state{color:#6f675e}
+.v42-current-info{margin-top:9px;display:grid;gap:5px}
+.v42-info-row{
+  display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;
+  padding:4px 8px;border-radius:999px;border:1px solid rgba(81,116,76,.10);
+  background:rgba(238,247,238,.55);font-size:8.5px;min-height:22px
+}
+.state-busy .v42-info-row{background:rgba(248,236,232,.52);border-color:rgba(172,91,68,.10)}
+.state-off .v42-info-row{background:rgba(238,235,230,.60);border-color:rgba(110,101,92,.10)}
+.v42-info-row span{color:#7f715f}
+.v42-info-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#446e4e;font-weight:800}
+.state-busy .v42-info-row strong{color:#9c523f}
+.state-off .v42-info-row strong{color:#6c655e}
+
+.v42-progress{
+  margin:8px 10px 0;padding:8px 10px;border-radius:13px;background:rgba(232,244,233,.72);
+  border:1px solid rgba(64,118,83,.09)
+}
+.state-busy .v42-progress{background:rgba(247,232,226,.70);border-color:rgba(172,91,68,.09)}
+.state-off .v42-progress{background:rgba(237,234,229,.72);border-color:rgba(108,101,93,.09)}
+.v42-progress-meta{display:flex;align-items:center;gap:6px;font-size:8.5px;color:#7e715f}
+.v42-progress-meta strong{margin-left:auto;color:#497b55}
+.state-busy .v42-progress-meta strong{color:#9a543f}
+.state-off .v42-progress-meta strong{color:#6f685f}
+.v42-dot{width:6px;height:6px;border-radius:50%;background:#5faf72;box-shadow:0 0 7px rgba(95,175,114,.22)}
+.state-busy .v42-dot{background:#cb7059;box-shadow:0 0 7px rgba(203,112,89,.20)}
+.state-off .v42-dot{background:#8d867d;box-shadow:none}
+.v42-progress-track{height:4px;margin-top:7px;border-radius:999px;overflow:hidden;background:rgba(89,120,92,.12)}
+.v42-progress-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,#65b57b,#4d9662);transition:width .5s ease}
+.state-busy .v42-progress-bar{background:linear-gradient(90deg,#d6816b,#b45d47)}
+.state-off .v42-progress-bar{background:#918a81}
+
+.v42-next-label{align-self:center;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:8.5px;color:#8a7763}
+.v42-next-label::before,.v42-next-label::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(126,101,74,.13))}
+.v42-next-label::after{background:linear-gradient(90deg,rgba(126,101,74,.13),transparent)}
+
+.v42-slots{min-height:0;padding:0 10px 10px;display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:6px}
+.v42-slot{
+  min-height:0;display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:center;
+  padding:7px 8px;border-radius:13px;background:#f6f1e8;border-left:3px solid #9eb29b
+}
+.v42-slot.available{background:rgba(239,246,235,.80);border-left-color:#70a97b}
+.v42-slot.busy{background:rgba(249,238,233,.83);border-left-color:#cf735b}
+.v42-slot.muted{opacity:.56}
+.v42-slot-icon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.78);color:#957d62;border:1px solid rgba(110,83,57,.07)}
+.v42-slot-icon svg{width:16px;height:16px}
+.v42-slot-time{font-size:12.5px;font-weight:800;color:#4e7b58;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v42-slot.busy .v42-slot-time{color:#a35a46}
+.v42-slot.muted .v42-slot-time{color:#80766d}
+.v42-slot-sub{margin-top:2px;font-size:8.5px;color:#8b7b67;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.v42-card .lang-pair{display:inline!important}
+.v42-card .lang-pair-block{display:block!important;width:100%}
+
+@keyframes v42Enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.v42-card.v42-enter{animation:v42Enter .42s var(--enter-delay,0ms) ease both}
+
+@media(max-width:1180px),(max-height:720px){
+  .v42-grid{gap:10px}
+  .v42-card{grid-template-rows:64px 145px 54px 20px minmax(0,1fr);border-radius:17px}
+  .v42-head{grid-template-columns:42px minmax(0,1fr) auto;padding:7px 9px}
+  .v42-head .v22-avatar{width:38px;height:38px}
+  .v42-name-th{font-size:14px}.v42-name-en{font-size:8px}.v42-badge{font-size:8px;padding:5px 7px}
+  .v42-current{margin:7px 7px 0;padding:8px 9px 7px}
+  .v42-current-top{grid-template-columns:32px minmax(0,1fr);gap:7px}
+  .v42-current-icon{width:30px;height:30px}.v42-current-state{font-size:16px}
+  .v42-info-row{grid-template-columns:62px minmax(0,1fr);font-size:7.5px;min-height:19px;padding:3px 7px}
+  .v42-progress{margin:6px 7px 0;padding:6px 8px}.v42-progress-meta{font-size:7.5px}
+  .v42-next-label{font-size:7.5px;padding:0 9px}
+  .v42-slots{padding:0 7px 7px;gap:5px}
+  .v42-slot{grid-template-columns:29px minmax(0,1fr);padding:5px 7px;border-radius:11px}
+  .v42-slot-icon{width:26px;height:26px}.v42-slot-time{font-size:10.5px}.v42-slot-sub{font-size:7.5px}
+}
+
 </style>
 </head>
 <body>
@@ -623,7 +733,7 @@ body.spa-debug #spaDebugPanel{display:block}
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V4.1 Booking Sync Fix",
+  BUILD: "V4.2 Detailed Queue Cards",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -1256,7 +1366,7 @@ function renderCards(queueList, scheduleMap){
   const scene = document.getElementById('displayScene');
   if (!scene) return;
 
-  const current = nowMinutes();
+  const now = nowMinutes();
   const openMin = CONFIG.OPEN_HOUR * 60;
   const closeMin = CONFIG.CLOSE_HOUR * 60;
 
@@ -1270,8 +1380,8 @@ function renderCards(queueList, scheduleMap){
     return;
   }
 
-  if (current < openMin){
-    const wait = Math.max(0, openMin - current);
+  if (now < openMin){
+    const wait = Math.max(0, openMin - now);
     const h = Math.floor(wait / 60);
     const m = wait % 60;
     const th = h ? `${h} ชม. ${m} นาที` : `${m} นาที`;
@@ -1289,7 +1399,7 @@ function renderCards(queueList, scheduleMap){
     return;
   }
 
-  if (current >= closeMin){
+  if (now >= closeMin){
     scene.className = 'v22-scene v22-afterhours';
     scene.innerHTML = `<div class="v22-preopen-card afterhours">
       <div class="v22-preopen-title">${languagePair('ขอบคุณสำหรับวันนี้','Thank you for today')}</div>
@@ -1302,45 +1412,178 @@ function renderCards(queueList, scheduleMap){
   }
 
   scene.className = 'v22-scene v22-open';
-  scene.innerHTML = `<div class="v22-grid">${
-    queueList.slice(0,3).map((t, idx) => {
-      const id = normalizeTherapistId(t.ID || t.Therapist_ID || fieldByNameOrPosition(t, 'ID', 0));
-      const nameTh = t.Name_TH || id || `Therapist ${idx + 1}`;
-      const nameEn = t.Name_EN || '';
-      const photo = t.Photo_URL ? `<img src="${t.Photo_URL}" alt="${escapeHtml(nameTh)}">` : avatarSvg();
 
-      const raw = cleanCell(t.Working_Today || 'ทำงาน').toLowerCase();
-      const offTokens = ['ไม่ทำงาน','วันหยุด','หยุด','ลา','ลางาน','ไม่เข้าทำงาน','ไม่เข้า','off','no','leave','day off'];
-      const isOff = offTokens.some(token => raw === token || raw.includes(token));
+  const cards = queueList.slice(0,3).map((t, idx) => {
+    const id = normalizeTherapistId(t.ID || t.Therapist_ID || fieldByNameOrPosition(t, 'ID', 0));
+    const nameTh = t.Name_TH || id || `Therapist ${idx + 1}`;
+    const nameEn = t.Name_EN || '';
+    const photo = t.Photo_URL ? `<img src="${t.Photo_URL}" alt="${escapeHtml(nameTh)}">` : avatarSvg();
 
-      if (isOff){
-        return v22Card(nameTh,nameEn,photo,'off','วันหยุด','Day Off','ไม่เข้าทำงานวันนี้','Not working today','ไม่รับคิวในวันนี้','Not accepting bookings today');
-      }
+    const raw = cleanCell(t.Working_Today || 'ทำงาน').toLowerCase();
+    const offTokens = ['ไม่ทำงาน','วันหยุด','หยุด','ลา','ลางาน','ไม่เข้าทำงาน','ไม่เข้า','off','no','leave','day off'];
+    const isOff = offTokens.some(token => raw === token || raw.includes(token));
 
-      const view = computeTherapistView(id, scheduleMap[id]);
+    if (isOff){
+      return detailedTherapistCard({
+        id,nameTh,nameEn,photo,state:'off',
+        statusTh:'วันหยุด',statusEn:'Day Off',
+        currentLabelTh:'ไม่เข้าทำงานวันนี้',currentLabelEn:'Not working today',
+        currentSubTh:'ไม่รับคิวในวันนี้',currentSubEn:'Not accepting bookings today',
+        currentStart:null,currentEnd:null,
+        nextSlots:[]
+      });
+    }
 
-      if (view.available){
-        const nextBusy = (view.nextThree || []).find(s => s.type === 'busy');
-        const nextTh = nextBusy?.startLabel ? `${nextBusy.startLabel} น.` : 'ยังไม่มีคิวจอง';
-        const nextEn = nextBusy?.startLabel || 'No booking scheduled';
-        const until = view.availableEndLabel || `${String(CONFIG.CLOSE_HOUR).padStart(2,'0')}:00`;
+    const view = computeTherapistView(id, scheduleMap[id] || []);
 
-        return v22Card(nameTh,nameEn,photo,'available','พร้อมให้บริการ','Available','รับ Walk-in ได้ทันที','Walk-in available now',`คิวถัดไป ${nextTh} • พร้อมถึง ${until} น.`,`Next ${nextEn} • Available until ${until}`);
-      }
+    if (view.available){
+      const nextBusy = (view.nextThree || []).find(s => s.type === 'busy');
+      const until = view.availableEndLabel || `${String(CONFIG.CLOSE_HOUR).padStart(2,'0')}:00`;
 
-      const customer = cleanCell(view.currentCustomerName) || 'ไม่ระบุ';
-      const course = cleanCell(view.currentCourse) || 'ไม่ระบุ';
+      return detailedTherapistCard({
+        id,nameTh,nameEn,photo,state:'available',
+        statusTh:'ว่าง',statusEn:'Available',
+        currentLabelTh:'ว่าง',currentLabelEn:'Available',
+        currentSubTh:nextBusy?.startLabel ? `รับ Walk-in ได้ถึง ${nextBusy.startLabel} น.` : `พร้อมให้บริการถึง ${until} น.`,
+        currentSubEn:nextBusy?.startLabel ? `Walk-in until ${nextBusy.startLabel}` : `Available until ${until}`,
+        currentStart:now,
+        currentEnd:view.availableEndMin || closeMin,
+        nextSlots:view.nextThree || []
+      });
+    }
 
-      return v22Card(nameTh,nameEn,photo,'busy','กำลังให้บริการ','Busy',escapeHtml(customer),escapeHtml(customer),`${escapeHtml(course)} • ถึง ${view.currentEndLabel} น.`,`${escapeHtml(course)} • until ${view.currentEndLabel}`);
-    }).join('')
-  }</div>`;
+    const customer = cleanCell(view.currentCustomerName || view.currentCustomer || '') || 'ไม่ระบุ';
+    const course = cleanCell(view.currentCourse || '') || 'ไม่ระบุ';
+
+    return detailedTherapistCard({
+      id,nameTh,nameEn,photo,state:'busy',
+      statusTh:'ไม่ว่าง',statusEn:'Busy',
+      currentLabelTh:customer,currentLabelEn:customer,
+      currentSubTh:`${course} • ถึง ${view.currentEndLabel} น.`,
+      currentSubEn:`${course} • until ${view.currentEndLabel}`,
+      currentStart:view.currentStartMin ?? now,
+      currentEnd:view.currentEndMin ?? now + 60,
+      nextSlots:view.nextThree || []
+    });
+  }).join('');
+
+  scene.innerHTML = `<div class="v42-grid">${cards}</div>`;
 
   requestAnimationFrame(() => {
-    scene.querySelectorAll('.v22-card').forEach((card, index) => {
-      card.style.setProperty('--enter-delay', `${index * 90}ms`);
-      card.classList.add('v22-enter');
+    scene.querySelectorAll('.v42-card').forEach((card,index) => {
+      card.style.setProperty('--enter-delay', `${index*80}ms`);
+      card.classList.add('v42-enter');
     });
   });
+}
+
+function detailedTherapistCard({
+  id,nameTh,nameEn,photo,state,
+  statusTh,statusEn,
+  currentLabelTh,currentLabelEn,
+  currentSubTh,currentSubEn,
+  currentStart,currentEnd,
+  nextSlots=[]
+}){
+  const now = nowMinutes();
+  let progress = 0;
+  let remainingTh = '—';
+  let remainingEn = '—';
+
+  if (currentStart !== null && currentEnd !== null && currentEnd > currentStart){
+    progress = Math.max(0,Math.min(100,((now-currentStart)/(currentEnd-currentStart))*100));
+    const rem = Math.max(0,currentEnd-now);
+    const rh = Math.floor(rem/60);
+    const rm = rem%60;
+    remainingTh = rh > 0 ? `${rh} ชม. ${rm} นาที` : `${rm} นาที`;
+    remainingEn = rh > 0 ? `${rh}h ${rm}m` : `${rm} min`;
+  }
+
+  const slots = (nextSlots || []).slice(0,3);
+  while (slots.length < 3) slots.push(null);
+
+  const slotHtml = slots.map(slot => {
+    if (!slot){
+      return `<div class="v42-slot muted">
+        <div class="v42-slot-icon">${calendarMiniSvg()}</div>
+        <div>
+          <div class="v42-slot-time">—</div>
+          <div class="v42-slot-sub">${languagePair('ไม่มีข้อมูล','No data')}</div>
+        </div>
+      </div>`;
+    }
+
+    const busy = slot.type === 'busy';
+    const label = `${slot.startLabel || '--:--'}–${slot.endLabel || '--:--'}`;
+    const detailTh = busy ? (slot.customer ? escapeHtml(slot.customer) : 'ไม่ว่าง') : 'ช่วงเวลาว่าง';
+    const detailEn = busy ? (slot.customer ? escapeHtml(slot.customer) : 'Busy') : 'Available';
+
+    return `<div class="v42-slot ${busy ? 'busy' : 'available'}">
+      <div class="v42-slot-icon">${calendarMiniSvg()}</div>
+      <div>
+        <div class="v42-slot-time">${label} · ${languagePair(busy ? 'ไม่ว่าง' : 'ว่าง',busy ? 'Busy' : 'Available')}</div>
+        <div class="v42-slot-sub">${languagePair(detailTh,detailEn)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const stateIcon = statusIconSvg(state === 'available' ? 'available' : state === 'busy' ? 'busy' : 'off');
+
+  return `<article class="v42-card state-${state}">
+    <div class="v42-head">
+      <div class="v22-avatar">${photo}</div>
+      <div class="v42-person">
+        <div class="v42-name-th">${escapeHtml(String(nameTh || ''))}</div>
+        <div class="v42-name-en">${escapeHtml(String(nameEn || ''))}</div>
+      </div>
+      <div class="v42-badge">${languagePair(statusTh,statusEn)}</div>
+    </div>
+
+    <div class="v42-current">
+      <div class="v42-current-top">
+        <div class="v42-current-icon">${stateIcon}</div>
+        <div class="v42-current-copy">
+          <div class="v42-current-time">${languagePair('คิวปัจจุบัน','Current queue')} <span>(${formatMinutes(now)} น.)</span></div>
+          <div class="v42-current-state">${languagePair(statusTh,statusEn)}</div>
+        </div>
+      </div>
+
+      <div class="v42-current-info">
+        <div class="v42-info-row">
+          <span>${languagePair('สถานะ','Status')}</span>
+          <strong>${languagePair(statusTh,statusEn)}</strong>
+        </div>
+        <div class="v42-info-row">
+          <span>${languagePair('คิวถัดไป','Next')}</span>
+          <strong>${languagePair(currentLabelTh,currentLabelEn)}</strong>
+        </div>
+        <div class="v42-info-row">
+          <span>${languagePair('บริการ','Service')}</span>
+          <strong>${languagePair(currentSubTh,currentSubEn)}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="v42-progress">
+      <div class="v42-progress-meta">
+        <span class="v42-dot"></span>
+        <span>${languagePair('เวลาคิวคงเหลือ','Queue time remaining')}</span>
+        <strong>${languagePair(remainingTh,remainingEn)}</strong>
+      </div>
+      <div class="v42-progress-track"><div class="v42-progress-bar" style="width:${progress.toFixed(1)}%"></div></div>
+    </div>
+
+    <div class="v42-next-label">${languagePair('คิวถัดไป','Next slots')}</div>
+    <div class="v42-slots">${slotHtml}</div>
+  </article>`;
+}
+
+function calendarMiniSvg(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+    <rect x="4" y="5.5" width="16" height="14" rx="2.5"></rect>
+    <path d="M8 3.5v4M16 3.5v4M4 9.5h16"></path>
+    <path d="M8 13h3M13 13h3M8 16h3"></path>
+  </svg>`;
 }
 
 function v22Card(nameTh,nameEn,photo,state,statusTh,statusEn,primaryTh,primaryEn,detailTh,detailEn){
