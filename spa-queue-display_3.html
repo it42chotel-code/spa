@@ -538,6 +538,25 @@ body.motion-paused .v22-icon{animation-play-state:paused!important}
   .lang-pair,.lang-pair-block{transition:none}
 }
 
+
+/* V4.1 optional diagnostics: append ?debug=1 to URL */
+#spaDebugPanel{
+  display:none;
+  position:fixed;
+  z-index:9999;
+  left:14px;
+  bottom:14px;
+  max-width:min(760px,calc(100vw - 28px));
+  padding:9px 12px;
+  border-radius:12px;
+  background:rgba(48,31,23,.90);
+  color:#f6ead5;
+  font:11px/1.45 var(--font-en);
+  box-shadow:0 12px 32px rgba(0,0,0,.18);
+  pointer-events:none;
+}
+body.spa-debug #spaDebugPanel{display:block}
+
 </style>
 </head>
 <body>
@@ -597,13 +616,14 @@ body.motion-paused .v22-icon{animation-play-state:paused!important}
 </div>
 <div class="sync-strip" id="syncStrip"><span class="dot" id="syncDot"></span><span id="syncText"></span></div>
 <div id="publicSyncWarning" role="status" aria-live="polite"></div>
+<div id="spaDebugPanel"></div>
 
 <script>
 /* ================================================================
    CONFIG — edit these values to match your own Google Sheet
    ================================================================ */
 const CONFIG = {
-  BUILD: "V4.0 Clean Production Build",
+  BUILD: "V4.1 Booking Sync Fix",
   SHEET_ID: "1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8",
   QUEUE_TAB: "Queue",                    // tab holding therapist identity (ID, Name, Photo)
   SCHEDULE_TAB: "ตารางเวลาหมอนวด",         // fallback tab name for the booking schedule
@@ -860,7 +880,7 @@ function buildScheduleMap(rows){
   (rows || []).forEach((r, rowIndex) => {
     try{
       const therapistRaw = fieldByNameOrPosition(r, 'Therapist_ID', 0);
-      const therapistId = String(therapistRaw ?? '').trim();
+      const therapistId = normalizeTherapistId(therapistRaw);
       if (!therapistId) return;
 
       const status = fieldByNameOrPosition(r, 'Status', 2);
@@ -958,6 +978,7 @@ function buildScheduleMap(rows){
         start,
         end,
         customer: String(customer || '').trim(),
+        customerName: String(customer || '').trim(),
         room: String(room || '').trim(),
         course: String(course || '').trim(),
         customerType: String(customerType || '').trim(),
@@ -1005,6 +1026,7 @@ function buildScheduleMap(rows){
         }
 
         if (!prev.customer && item.customer) prev.customer = item.customer;
+        if (!prev.customerName && item.customerName) prev.customerName = item.customerName;
         if (!prev.room && item.room) prev.room = item.room;
         if (!prev.course && item.course) prev.course = item.course;
         if (!prev.customerType && item.customerType) prev.customerType = item.customerType;
@@ -1352,11 +1374,22 @@ function zeroCard(nameTh,nameEn,photo,state,sTh,sEn,pTh,pEn,mTh,mEn){
 
 function applySettings(settingsRows){
   const map = {};
-  settingsRows.forEach(r => { map[r.Key] = r.Value; });
-  if (map.ShopName_TH) document.getElementById('shopNameTh').textContent = map.ShopName_TH;
-  if (map.ShopName_EN) document.getElementById('shopNameEn').textContent = map.ShopName_EN;
-  if (map.Tagline_TH) document.getElementById('taglineTh').textContent = map.Tagline_TH;
-  if (map.Tagline_EN && document.getElementById('taglineEn')) document.getElementById('taglineEn').textContent = map.Tagline_EN;
+  (settingsRows || []).forEach(r => {
+    const key = cleanCell(r.Key);
+    if (key) map[key] = r.Value;
+  });
+
+  const setText = (id, value) => {
+    if (!value) return;
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+
+  // These IDs exist only in some layouts; safely ignore missing nodes.
+  setText('shopNameTh', map.ShopName_TH);
+  setText('shopNameEn', map.ShopName_EN);
+  setText('taglineTh', map.Tagline_TH);
+  setText('taglineEn', map.Tagline_EN);
 }
 
 
@@ -1379,27 +1412,166 @@ function validateScheduleRuntime(scheduleRows, scheduleMap){
   }
 }
 
-/* ---------------- Sync loop ---------------- */
-async function fetchScheduleRows(){
-  const attempts = [
-    () => fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID),
-    () => fetchTab(CONFIG.SCHEDULE_TAB)
-  ];
-  let lastError = null;
-  for (const attempt of attempts){
-    try{
-      const rows = await attempt();
-      if (!rows.length) return rows;
-      const first = rows[0] || {};
-      const id = fieldByNameOrPosition(first, 'Therapist_ID', 0);
-      const time = fieldByNameOrPosition(first, 'Time_Slot', 1);
-      if (cleanCell(id) || cleanCell(time)) return rows;
-    } catch (err){
-      lastError = err;
+
+function validateCurrentBusyRows(scheduleRows, scheduleMap){
+  const nowMin = nowMinutes();
+  const issues = [];
+
+  for (const row of (scheduleRows || [])){
+    if (!isBusyStatus(fieldByNameOrPosition(row, 'Status', 2))) continue;
+
+    const therapistId = normalizeTherapistId(fieldByNameOrPosition(row, 'Therapist_ID', 0));
+    if (!therapistId) continue;
+
+    const explicitStart = parseExactTime(fieldByNameOrPosition(row, 'เวลาเริ่มจริง', 11));
+    const explicitEnd = parseExactTime(fieldByNameOrPosition(row, 'เวลาสิ้นสุดจริง', 12));
+    const slotStart = parseExactTime(fieldByNameOrPosition(row, 'Time_Slot', 1));
+    const duration = parseDurationMinutes(fieldByNameOrPosition(row, 'ชั่วโมง', 7));
+
+    const start = explicitStart !== null ? explicitStart : slotStart;
+    const end = explicitEnd !== null
+      ? explicitEnd
+      : (start !== null ? start + (duration || 60) : null);
+
+    if (start === null || end === null) continue;
+
+    if (nowMin >= start && nowMin < end){
+      const bookings = scheduleMap[therapistId] || [];
+      const parsedCurrent = bookings.find(b => nowMin >= b.startMin && nowMin < b.endMin);
+      if (!parsedCurrent){
+        issues.push({therapistId,start,end,row});
+      }
     }
   }
-  if (lastError) throw lastError;
-  return [];
+
+  if (issues.length){
+    console.error('[Spa Queue CRITICAL] A busy row covers the current time but is not active after parsing.', issues);
+    return false;
+  }
+  return true;
+}
+
+// Regression test for the exact case that previously failed:
+// Therapist 2, explicit booking 14:30–17:30 must be Busy at 14:52.
+function runBookingParserSelfTest(){
+  const synthetic = [{
+    Therapist_ID:'2',
+    Time_Slot:'14:00',
+    Status:'ไม่ว่าง',
+    Customer_Note:'TEST',
+    ชั่วโมง:'2.5',
+    'เวลาเริ่มจริง':'14:30',
+    'เวลาสิ้นสุดจริง':'17:30'
+  }];
+
+  const map = buildScheduleMap(synthetic);
+  const b = map['2']?.[0];
+  const pass = Boolean(b && b.startMin === 14*60+30 && b.endMin === 17*60+30);
+
+  if (!pass){
+    console.error('[Spa Queue SELF-TEST FAILED] explicit-time parser', {map});
+  }else{
+    console.info('[Spa Queue SELF-TEST PASS] explicit 14:30–17:30 parsed correctly');
+  }
+  return pass;
+}
+
+/* ---------------- Sync loop ---------------- */
+function scoreScheduleSource(rows, sourceLabel){
+  const list = rows || [];
+  if (!list.length){
+    return {score:-1000, rows:list, sourceLabel, busyRows:0, explicitRows:0, usableRows:0};
+  }
+
+  let busyRows = 0;
+  let explicitRows = 0;
+  let usableRows = 0;
+  let idRows = 0;
+  let timeRows = 0;
+
+  for (const r of list){
+    const id = normalizeTherapistId(fieldByNameOrPosition(r, 'Therapist_ID', 0));
+    const slot = fieldByNameOrPosition(r, 'Time_Slot', 1);
+    const status = fieldByNameOrPosition(r, 'Status', 2);
+    const start = fieldByNameOrPosition(r, 'เวลาเริ่มจริง', 11);
+    const end = fieldByNameOrPosition(r, 'เวลาสิ้นสุดจริง', 12);
+
+    if (id) idRows++;
+    if (parseExactTime(slot) !== null) timeRows++;
+    if (id && parseExactTime(slot) !== null) usableRows++;
+    if (isBusyStatus(status)) busyRows++;
+    if (parseExactTime(start) !== null || parseExactTime(end) !== null) explicitRows++;
+  }
+
+  // Busy and exact-time data are weighted heavily. This makes the display prefer
+  // the worksheet that actually contains today's live queue, not merely a valid old grid.
+  const score =
+      usableRows * 2
+    + idRows
+    + timeRows
+    + busyRows * 120
+    + explicitRows * 55;
+
+  return {score, rows:list, sourceLabel, busyRows, explicitRows, usableRows};
+}
+
+async function fetchScheduleRows(){
+  const sources = [
+    {
+      label:`${CONFIG.SCHEDULE_TAB} (gid ${CONFIG.SCHEDULE_GID})`,
+      fetch:() => fetchTab(CONFIG.SCHEDULE_TAB, CONFIG.SCHEDULE_GID)
+    },
+    {
+      label:`${CONFIG.SCHEDULE_TAB} (by name)`,
+      fetch:() => fetchTab(CONFIG.SCHEDULE_TAB)
+    }
+  ];
+
+  const results = await Promise.all(sources.map(async source => {
+    try{
+      const rows = await source.fetch();
+      return {...scoreScheduleSource(rows, source.label), error:null};
+    }catch(error){
+      return {...scoreScheduleSource([], source.label), error};
+    }
+  }));
+
+  const successful = results
+    .filter(r => !r.error)
+    .sort((a,b) => b.score - a.score);
+
+  if (!successful.length){
+    const details = results
+      .map(r => `${r.sourceLabel}: ${r.error?.message || 'ไม่พบข้อมูล'}`)
+      .join(' | ');
+    throw new Error(`อ่านตารางคิวไม่ได้ทุกแหล่ง: ${details}`);
+  }
+
+  const chosen = successful[0];
+  console.info('[Spa Queue] schedule source selected', {
+    source: chosen.sourceLabel,
+    score: chosen.score,
+    rows: chosen.rows.length,
+    busyRows: chosen.busyRows,
+    explicitRows: chosen.explicitRows,
+    alternatives: successful.slice(1).map(s => ({
+      source:s.sourceLabel,
+      score:s.score,
+      rows:s.rows.length,
+      busyRows:s.busyRows,
+      explicitRows:s.explicitRows
+    }))
+  });
+
+  window.__SPA_SCHEDULE_SOURCE__ = chosen.sourceLabel;
+  window.__SPA_SCHEDULE_SOURCE_STATS__ = {
+    rows:chosen.rows.length,
+    busyRows:chosen.busyRows,
+    explicitRows:chosen.explicitRows,
+    score:chosen.score
+  };
+
+  return chosen.rows;
 }
 
 let lastGoodQueue = null;
@@ -1484,12 +1656,13 @@ function updateSyncStatus(){
   }
 
   if (adminDebugMode && lastSyncStats){
-    th += ` · ${CONFIG.BUILD} · แถว ${lastSyncStats.rows} · ไม่ว่าง ${lastSyncStats.busyRows} · คิว ${lastSyncStats.bookings} · ล้มเหลว ${consecutiveSyncFailures}`;
-    en += ` · ${CONFIG.BUILD} · Rows ${lastSyncStats.rows} · Busy ${lastSyncStats.busyRows} · Bookings ${lastSyncStats.bookings} · Failures ${consecutiveSyncFailures}`;
+    th += ` · ${CONFIG.BUILD} · ${lastSyncStats.source} · แถว ${lastSyncStats.rows} · ไม่ว่าง ${lastSyncStats.busyRows} · คิว ${lastSyncStats.bookings} · ล้มเหลว ${consecutiveSyncFailures}`;
+    en += ` · ${CONFIG.BUILD} · ${lastSyncStats.source} · Rows ${lastSyncStats.rows} · Busy ${lastSyncStats.busyRows} · Bookings ${lastSyncStats.bookings} · Failures ${consecutiveSyncFailures}`;
   }
 
   setSyncLevel(level);
   text.innerHTML = languagePair(th, en);
+  updateSpaDebugPanel();
 }
 
 function scheduleRecoveryReload(){
@@ -1515,6 +1688,7 @@ async function syncNow(reason = 'interval'){
     ]);
     const scheduleMap = buildScheduleMap(scheduleRows);
     validateScheduleRuntime(scheduleRows, scheduleMap);
+    const currentBusySanityOk = validateCurrentBusyRows(scheduleRows, scheduleMap);
     const bookingCount = Object.values(scheduleMap).reduce((sum, list) => sum + list.length, 0);
     const busyRowCount = scheduleRows.filter(r => isBusyStatus(fieldByNameOrPosition(r, 'Status', 2))).length;
 
@@ -1524,7 +1698,15 @@ async function syncNow(reason = 'interval'){
     setPublicSyncWarning('');
     consecutiveSyncFailures = 0;
     lastSyncError = null;
-    lastSyncStats = { rows:scheduleRows.length, busyRows:busyRowCount, bookings:bookingCount, reason };
+    lastSyncStats = {
+      rows:scheduleRows.length,
+      busyRows:busyRowCount,
+      bookings:bookingCount,
+      reason,
+      source:window.__SPA_SCHEDULE_SOURCE__ || CONFIG.SCHEDULE_TAB,
+      explicitRows:window.__SPA_SCHEDULE_SOURCE_STATS__?.explicitRows || 0,
+      currentBusySanityOk
+    };
     recoveryReloadScheduled = false;
 
     renderCards(queue, scheduleMap);
@@ -1537,6 +1719,11 @@ async function syncNow(reason = 'interval'){
     if (busyRowCount > 0 && bookingCount === 0){
       consecutiveSyncFailures = 1;
       lastSyncError = new Error('พบแถวไม่ว่าง แต่แปลงเป็นคิวไม่ได้');
+      setPublicSyncWarning('พบข้อมูลคิว แต่ระบบแปลงเวลาไม่สำเร็จ กรุณาติดต่อ Front Reception');
+    } else if (!currentBusySanityOk){
+      consecutiveSyncFailures = 1;
+      lastSyncError = new Error('มีคิวครอบคลุมเวลาปัจจุบัน แต่สถานะ Busy ไม่ถูกสร้าง');
+      setPublicSyncWarning('ตรวจพบคิวปัจจุบัน แต่สถานะหน้าจอไม่ตรง กรุณาติดต่อ Front Reception');
     }
   } catch (err){
     consecutiveSyncFailures += 1;
@@ -2002,6 +2189,7 @@ updateSyncStatus();
 window.setInterval(tickClock, 1000);
 window.setInterval(updateAtmosphere, 60000);
 window.setInterval(updateSessionProgress, 15000);
+runBookingParserSelfTest();
 syncNow('initial');
 window.setInterval(() => syncNow('interval'), CONFIG.REFRESH_MS);
 </script>
@@ -2126,5 +2314,21 @@ window.setInterval(() => syncNow('interval'), CONFIG.REFRESH_MS);
 })();
 </script>
 
+<script>
+
+function updateSpaDebugPanel(){
+  const panel = document.getElementById('spaDebugPanel');
+  if (!panel || !document.body.classList.contains('spa-debug')) return;
+  const s = lastSyncStats || {};
+  panel.textContent =
+    `BUILD ${CONFIG.BUILD} | source: ${s.source || '-'} | rows: ${s.rows ?? '-'} | busy: ${s.busyRows ?? '-'} | bookings: ${s.bookings ?? '-'} | explicit: ${s.explicitRows ?? '-'} | current-check: ${s.currentBusySanityOk ?? '-'} | sync: ${formatSyncTime(lastSuccessfulSyncAt,true)} | error: ${lastSyncError?.message || '-'}`;
+}
+
+if (new URLSearchParams(location.search).get('debug') === '1'){
+  document.body.classList.add('spa-debug');
+  window.setInterval(updateSpaDebugPanel, 1000);
+}
+
+</script>
 </body>
 </html>
