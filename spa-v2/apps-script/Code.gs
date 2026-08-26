@@ -6,7 +6,7 @@
  * Public API returns only therapist names, photos, working state, status and times.
  */
 const SPAQ = Object.freeze({
-  VERSION: '2.0.0',
+  VERSION: '2.0.1',
   TIMEZONE: 'Asia/Bangkok',
   QUEUE_SPREADSHEET_ID: '1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8',
   REGISTRY_SPREADSHEET_ID: '1UM-6JfkCp3DJPwaT3Zg1kRX85Psm1epY',
@@ -272,6 +272,7 @@ function runExport_(runLabel) {
 
     source.bookings.forEach(function(booking) {
       let targetRow = existing[booking.bookingId] || 0;
+      const existed = Boolean(targetRow);
       let sequence;
 
       if (targetRow) {
@@ -310,7 +311,7 @@ function runExport_(runLabel) {
         businessDate: booking.businessDate,
         bookingId: booking.bookingId,
         sourceRow: booking.sourceRow,
-        action: targetRow ? (updated ? 'UPSERT' : 'INSERT') : 'INSERT',
+        action: existed ? 'UPDATE' : 'INSERT',
         targetSheet: targetSheet.getName(),
         targetRow: targetRow,
         details: runLabel
@@ -363,7 +364,16 @@ function verifyAndReset_(runLabel) {
     if (verification.missing.length) {
       logEvent_('RESET_' + runLabel, 'RETRY_EXPORT',
         'Missing before reset: ' + verification.missing.join(', '));
-      runExport_('RESET_RETRY');
+
+      // Release the reset lock before the export routine acquires its own lock.
+      // This prevents a nested-lock timeout while retaining a single writer.
+      lock.releaseLock();
+      try {
+        runExport_('RESET_RETRY');
+      } finally {
+        lock.waitLock(30000);
+      }
+
       source = inspectSource_();
       verification = verifyExport_(source);
     }
@@ -404,10 +414,9 @@ function verifyAndReset_(runLabel) {
       businessDate: source.businessDateKey
     };
   } finally {
-    lock.releaseLock();
+    if (lock.hasLock()) lock.releaseLock();
   }
 }
-
 function blockReset_(runLabel, reason) {
   writeAudit_([{
     businessDate: getBusinessDateKey_(),
@@ -590,7 +599,7 @@ function buildPublicState_() {
       const items = [];
       let hasLastQueue = false;
       let lastQueueEnd = null;
-      let explicitClosed = false;
+      let explicitClosedAt = null;
       let explicitOpen = false;
 
       for (let r = 1; r < values.length; r++) {
@@ -598,7 +607,10 @@ function buildPublicState_() {
         if (rowId !== therapist.id) continue;
 
         const status = normalizeStatus_(display[r][headers.status]);
-        if (status === SPAQ.STATUS.CLOSED) explicitClosed = true;
+        const slotMinutes = parseTimeMinutes_(values[r][headers.timeSlot], display[r][headers.timeSlot]);
+        if (status === SPAQ.STATUS.CLOSED && slotMinutes !== null) {
+          explicitClosedAt = explicitClosedAt === null ? slotMinutes : Math.min(explicitClosedAt, slotMinutes);
+        }
         if (status === SPAQ.STATUS.OPEN) explicitOpen = true;
 
         const hasDetails = Boolean(
@@ -630,19 +642,17 @@ function buildPublicState_() {
       }
 
       let currentStatus = SPAQ.STATUS.AVAILABLE;
+      const adjustedNow = nowMinutes < SPAQ.START_HOUR * 60 ? nowMinutes + 24 * 60 : nowMinutes;
       const activeBooking = items.find(function(item) {
-        const adjustedNow = nowMinutes < SPAQ.START_HOUR * 60 ? nowMinutes + 24 * 60 : nowMinutes;
         return adjustedNow >= item.startMinutes && adjustedNow < item.endMinutes;
       });
 
-      if (explicitClosed || (hasLastQueue && lastQueueEnd !== null &&
-          (nowMinutes < SPAQ.START_HOUR * 60 ? nowMinutes + 24 * 60 : nowMinutes) >= lastQueueEnd)) {
+      if ((explicitClosedAt !== null && adjustedNow >= explicitClosedAt) ||
+          (hasLastQueue && lastQueueEnd !== null && adjustedNow >= lastQueueEnd)) {
         currentStatus = SPAQ.STATUS.CLOSED;
       } else if (activeBooking) {
         currentStatus = activeBooking.status === SPAQ.STATUS.LAST ?
           SPAQ.STATUS.LAST : SPAQ.STATUS.BUSY;
-      } else if (hasLastQueue) {
-        currentStatus = SPAQ.STATUS.LAST;
       } else if (explicitOpen) {
         currentStatus = SPAQ.STATUS.OPEN;
       } else if (nowMinutes < SPAQ.START_HOUR * 60 || nowMinutes >= SPAQ.END_HOUR * 60) {
