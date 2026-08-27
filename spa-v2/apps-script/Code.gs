@@ -6,7 +6,7 @@
  * Public API returns only therapist names, photos, working state, status and times.
  */
 const SPAQ = Object.freeze({
-  VERSION: '2.0.2',
+  VERSION: '2.0.3',
   TIMEZONE: 'Asia/Bangkok',
   QUEUE_SPREADSHEET_ID: '1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8',
   REGISTRY_SPREADSHEET_ID: '1UM-6JfkCp3DJPwaT3Zg1kRX85Psm1epY',
@@ -20,7 +20,7 @@ const SPAQ = Object.freeze({
   FIRST_DATA_ROW: 2,
   REGISTRY_FIRST_DATA_ROW: 3,
   START_HOUR: 14,
-  END_HOUR: 24,
+  END_HOUR: 23,
   SLOT_TIMES: ['14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
   STATUS: Object.freeze({
     AVAILABLE: 'ว่าง',
@@ -510,6 +510,12 @@ function inspectSource_() {
       if (durationMinutes <= 0 || durationMinutes > 12 * 60) {
         errors.push('ช่วงเวลาจริงไม่สมเหตุสมผล');
       }
+      if (startMinutes < SPAQ.START_HOUR * 60 || startMinutes >= SPAQ.END_HOUR * 60) {
+        errors.push('เวลาเริ่มจริงต้องอยู่ระหว่าง 14:00–ก่อน 23:00');
+      }
+      if (endMinutes > SPAQ.END_HOUR * 60) {
+        errors.push('เวลาสิ้นสุดจริงเกินเวลาปิด 23:00');
+      }
     }
 
     if (errors.length) {
@@ -680,7 +686,7 @@ function buildPublicState_() {
     businessDate: dayKey,
     schedule: {
       start: '14:00',
-      end: '24:00',
+      end: '23:00',
       slots: SPAQ.SLOT_TIMES
     },
     spaStatus: publicTherapists.some(function(item) {
@@ -739,7 +745,7 @@ function ensureQueueRows_(queueSS) {
         const row = new Array(display[0].length).fill('');
         row[headers.therapistId] = therapist.id;
         row[headers.timeSlot] = slot;
-        row[headers.status] = therapist.workingToday ?
+        row[headers.status] = therapist.workingToday && slot !== '23:00' ?
           SPAQ.STATUS.AVAILABLE : SPAQ.STATUS.CLOSED;
         newRows.push(row);
       }
@@ -768,7 +774,9 @@ function resetQueueData_(queueSS) {
   const statusValues = [];
   for (let r = 1; r < display.length; r++) {
     const id = cleanText_(display[r][headers.therapistId]);
-    statusValues.push([working[id] ? SPAQ.STATUS.AVAILABLE : SPAQ.STATUS.CLOSED]);
+    const slot = normalizeClockText_(display[r][headers.timeSlot]);
+    const canOpen = Boolean(working[id]) && slot !== '23:00';
+    statusValues.push([canOpen ? SPAQ.STATUS.AVAILABLE : SPAQ.STATUS.CLOSED]);
   }
   sheet.getRange(2, headers.status + 1, statusValues.length, 1).setValues(statusValues);
 
@@ -1305,6 +1313,7 @@ function runSpaQueueSelfTest() {
   expect('hours', roundHours_((17 * 60 + 40 - (16 * 60 + 10)) / 60), 1.5);
   expect('status', normalizeStatus_('คิวสุดท้ายของวัน'), SPAQ.STATUS.LAST);
   expect('buddhist month', thaiMonthSheetName_(new Date(2026, 7, 1)), 'สิงหาคม 2569');
+  expect('closing hour', SPAQ.END_HOUR, 23);
 
   console.log(JSON.stringify(tests, null, 2));
   return tests;
