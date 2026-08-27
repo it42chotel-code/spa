@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex,nofollow">
   <title>42C Spa Queue</title>
   <style>
@@ -547,6 +547,171 @@
         50% { transform: scale(1.16); opacity: .72; }
       }
     }
+  
+    /* 42C original light palette */
+    :root {
+      --ink: #241811;
+      --muted: #8A7A64;
+      --night: #F4EEE0;
+      --brown-950: #FFFDF8;
+      --brown-900: #F4EEE0;
+      --brown-800: #EFE6D3;
+      --brown-700: #6B4A32;
+      --gold: #C6A24D;
+      --gold-soft: #7D5B3F;
+      --line: rgba(36, 24, 17, .12);
+      --line-strong: rgba(107, 74, 50, .24);
+      --green: #2F6B45;
+      --red: #A6462F;
+      --amber: #B58A33;
+      --blue: #557D8B;
+      --shadow: 0 1px 2px rgba(36,24,17,.06), 0 18px 40px -18px rgba(36,24,17,.30);
+    }
+
+    html { color-scheme: light; }
+
+    body {
+      background:
+        radial-gradient(1200px 600px at 90% -10%, rgba(198,162,77,.10), transparent 60%),
+        radial-gradient(900px 500px at -5% 110%, rgba(198,162,77,.08), transparent 55%),
+        var(--night);
+    }
+
+    body::before {
+      opacity: .22;
+      background-image:
+        linear-gradient(115deg, transparent 0 48%, rgba(107,74,50,.028) 49%, transparent 50%),
+        linear-gradient(25deg, transparent 0 48%, rgba(198,162,77,.034) 49%, transparent 50%);
+    }
+
+    .mark {
+      color: var(--espresso, #6B4A32);
+      background:
+        linear-gradient(145deg, rgba(231,206,140,.28), rgba(255,255,255,.72)),
+        #FFFDF8;
+      box-shadow: inset 0 1px rgba(255,255,255,.9), var(--shadow);
+    }
+
+    .mark em { color: #B85B40; }
+
+    .spa-state {
+      color: var(--muted);
+      background: rgba(255,253,248,.88);
+      box-shadow: 0 10px 28px -22px rgba(36,24,17,.5);
+    }
+
+    .notice {
+      border-color: rgba(198,162,77,.32);
+      color: #8A6424;
+      background: #FFF8E8;
+      box-shadow: 0 6px 18px -14px rgba(154,108,28,.5);
+    }
+
+    .notice.critical {
+      border-color: rgba(166,70,47,.30);
+      color: #94442F;
+      background: #FFF0E9;
+    }
+
+    .panel {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.72), transparent 24%),
+        rgba(255,253,248,.94);
+    }
+
+    .panel-head {
+      background: rgba(239,230,211,.58);
+    }
+
+    .privacy { color: #2F6B45; }
+
+    .time-rail {
+      background: rgba(244,238,224,.56);
+    }
+
+    .time-label { color: #6B4A32; }
+
+    .therapist-head {
+      background:
+        linear-gradient(135deg, rgba(198,162,77,.10), transparent 58%),
+        rgba(255,253,248,.94);
+    }
+
+    .avatar {
+      color: #6B4A32;
+      background: #EFE6D3;
+      box-shadow:
+        inset 0 0 0 4px rgba(255,255,255,.46),
+        0 10px 24px -18px rgba(36,24,17,.65);
+    }
+
+    .status-pill {
+      color: #5B4A3B;
+      background: rgba(107,74,50,.08);
+    }
+
+    .status-pill.available,
+    .status-pill.open {
+      color: #2F6B45;
+      background: #E4EFE3;
+    }
+
+    .status-pill.busy {
+      color: #8F3C2B;
+      background: #F4E4DE;
+    }
+
+    .status-pill.last {
+      color: #8A6424;
+      background: #FFF3D3;
+    }
+
+    .status-pill.closed {
+      color: #5F5A55;
+      background: #EAE4D8;
+    }
+
+    .timeline {
+      background-color: #FFFDF8;
+    }
+
+    .timeline::after {
+      background:
+        linear-gradient(90deg, rgba(198,162,77,.025), transparent 50%, rgba(107,74,50,.018));
+    }
+
+    .booking {
+      border-color: rgba(166,70,47,.32);
+      border-left-color: #A6462F;
+      color: #6B3429;
+      background:
+        linear-gradient(110deg, #F4E4DE, rgba(255,253,248,.94));
+      box-shadow: 0 9px 22px -16px rgba(107,74,50,.64);
+    }
+
+    .booking.last {
+      border-color: rgba(198,162,77,.42);
+      border-left-color: #C6A24D;
+      color: #74531F;
+      background:
+        linear-gradient(110deg, #FFF3D3, rgba(255,253,248,.96));
+    }
+
+    .now-line {
+      background: #C6A24D;
+      box-shadow: 0 0 10px rgba(198,162,77,.62);
+    }
+
+    .now-line::before { background: #C6A24D; }
+
+    .empty-card {
+      color: var(--muted);
+      background: rgba(255,253,248,.72);
+      box-shadow: 0 12px 30px -24px rgba(36,24,17,.55);
+    }
+
+    .footer { color: #8A7A64; }
+
   </style>
 </head>
 <body>
