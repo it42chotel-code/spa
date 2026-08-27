@@ -6,765 +6,641 @@
   <meta name="color-scheme" content="light">
   <meta name="robots" content="noindex,nofollow">
   <title>42C Spa Queue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Inter:wght@500;600;700&family=Noto+Serif+Thai:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #f9f4e9;
-      --muted: #b9ad9c;
-      --night: #110d0b;
-      --brown-950: #1b120e;
-      --brown-900: #241710;
-      --brown-800: #382217;
-      --brown-700: #56351f;
-      --gold: #d9b36a;
-      --gold-soft: #f1d99c;
-      --line: rgba(221, 187, 117, .19);
-      --line-strong: rgba(221, 187, 117, .36);
-      --green: #73c79d;
-      --red: #ed8075;
-      --amber: #e2b256;
-      --blue: #75b7d3;
-      --hour-height: clamp(43px, 5.4vh, 64px);
-      --radius: 24px;
-      --shadow: 0 24px 70px rgba(0, 0, 0, .38);
+      --bg: #F4EEE0;
+      --bg-2: #EFE6D3;
+      --espresso: #6B4A32;
+      --espresso-2: #7D5B3F;
+      --gold: #C6A24D;
+      --gold-light: #E7CE8C;
+      --ink: #241811;
+      --muted: #82735F;
+      --line: rgba(36,24,17,.12);
+      --available: #2F6B45;
+      --available-bg: #E4EFE3;
+      --busy: #A6462F;
+      --busy-bg: #F4E4DE;
+      --last: #8A6424;
+      --last-bg: #FFF3D3;
+      --closed: #625D58;
+      --closed-bg: #EAE4D8;
+      --card: #FFFDF8;
+      --shadow: 0 1px 2px rgba(36,24,17,.06), 0 18px 40px -18px rgba(36,24,17,.30);
+      --shadow-lift: 0 2px 4px rgba(36,24,17,.08), 0 28px 56px -24px rgba(36,24,17,.38);
+      --thai: "Noto Serif Thai", "Leelawadee UI", serif;
+      --english: "Inter", "Segoe UI", sans-serif;
+      --clock: "Cinzel", Georgia, serif;
     }
 
     * { box-sizing: border-box; }
 
     html, body {
       width: 100%;
-      min-height: 100%;
+      height: 100%;
       margin: 0;
-      background: var(--night);
-      color: var(--ink);
-      font-family: "Noto Sans Thai", "Leelawadee UI", "Segoe UI", sans-serif;
+      overflow: hidden;
     }
 
     body {
-      min-height: 100vh;
-      overflow-x: hidden;
+      color: var(--ink);
       background:
-        radial-gradient(circle at 8% -10%, rgba(171, 112, 55, .22), transparent 36%),
-        radial-gradient(circle at 96% 10%, rgba(115, 69, 36, .18), transparent 30%),
-        linear-gradient(145deg, #100c0a 0%, #1a120e 50%, #0f0b09 100%);
+        radial-gradient(1200px 600px at 90% -10%, rgba(198,162,77,.10), transparent 60%),
+        radial-gradient(900px 500px at -5% 110%, rgba(198,162,77,.08), transparent 55%),
+        var(--bg);
+      font-family: var(--thai);
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .14;
-      background-image:
-        linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,.025) 49%, transparent 50%),
-        linear-gradient(25deg, transparent 0 48%, rgba(255,255,255,.018) 49%, transparent 50%);
-      background-size: 34px 34px;
+    .display {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: clamp(16px, 2.5vw, 34px);
     }
 
-    .app {
-      position: relative;
-      min-height: 100vh;
-      padding: clamp(18px, 2.2vw, 34px);
-    }
-
-    .topbar {
+    .header {
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) auto minmax(260px, 1fr);
+      grid-template-columns: minmax(240px, .9fr) minmax(360px, 1.7fr) minmax(220px, .9fr);
       align-items: center;
       gap: 22px;
-      margin-bottom: 20px;
+      flex: 0 0 auto;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 15px;
       min-width: 0;
     }
 
-    .mark {
-      flex: 0 0 auto;
+    .logo {
       display: grid;
-      place-items: center;
+      flex: 0 0 auto;
       width: 84px;
-      height: 84px;
-      border: 1px solid var(--line-strong);
-      border-radius: 26px 10px 26px 10px;
-      color: var(--gold-soft);
-      background:
-        linear-gradient(145deg, rgba(230, 195, 125, .12), rgba(255,255,255,.02)),
-        #20150f;
-      box-shadow: inset 0 1px rgba(255,255,255,.08), var(--shadow);
+      height: 68px;
+      place-items: center;
+      border: 1px solid rgba(107,74,50,.16);
+      border-radius: 17px 7px 17px 7px;
+      color: var(--espresso);
+      background: rgba(255,253,248,.76);
+      box-shadow: var(--shadow);
       font-family: Georgia, serif;
       font-size: 31px;
       letter-spacing: -3px;
     }
 
-    .mark em {
-      color: #d64b39;
-      font-style: normal;
-    }
+    .logo em { color: #B85B40; font-style: normal; }
 
-    .eyebrow {
-      color: var(--gold);
+    .hotel {
+      color: var(--espresso);
+      font-family: var(--english);
       font-size: 12px;
       font-weight: 700;
-      letter-spacing: .19em;
+      letter-spacing: .17em;
       text-transform: uppercase;
     }
 
-    h1 {
-      margin: 4px 0 0;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(26px, 2.35vw, 44px);
-      font-weight: 500;
-      line-height: 1.04;
-      letter-spacing: .02em;
-    }
-
-    .title-th {
-      display: block;
-      margin-top: 3px;
+    .brand-sub {
+      margin-top: 4px;
       color: var(--muted);
-      font-family: "Noto Sans Thai", "Leelawadee UI", sans-serif;
-      font-size: .43em;
-      font-weight: 500;
-      letter-spacing: .06em;
+      font-family: var(--english);
+      font-size: 11px;
     }
 
-    .spa-state {
-      justify-self: center;
+    .welcome { text-align: center; }
+
+    .welcome-th {
+      color: var(--espresso);
+      font-size: clamp(23px, 2.25vw, 38px);
+      font-weight: 700;
+      line-height: 1.12;
+    }
+
+    .welcome-en {
+      margin-top: 4px;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: clamp(11px, 1vw, 15px);
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .hours {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      min-height: 42px;
-      padding: 9px 18px;
-      border: 1px solid var(--line);
+      gap: 8px;
+      margin-top: 8px;
+      padding: 4px 12px;
+      border: 1px solid rgba(198,162,77,.25);
       border-radius: 999px;
-      color: var(--muted);
-      background: rgba(28, 19, 14, .72);
-      font-size: 14px;
-      white-space: nowrap;
-      backdrop-filter: blur(14px);
+      color: #806426;
+      background: rgba(255,248,232,.72);
+      font-family: var(--english);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
     }
 
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--amber);
-      box-shadow: 0 0 18px currentColor;
-    }
-
-    .spa-state.open .dot { color: var(--green); background: var(--green); }
-    .spa-state.closed .dot { color: var(--red); background: var(--red); }
-
-    .datetime {
-      justify-self: end;
-      text-align: right;
-    }
+    .datetime { text-align: right; }
 
     .clock {
-      color: var(--gold-soft);
-      font-family: "Segoe UI", sans-serif;
-      font-size: clamp(30px, 3.3vw, 58px);
+      color: var(--espresso);
+      font-family: var(--clock);
+      font-size: clamp(35px, 4vw, 62px);
       font-variant-numeric: tabular-nums;
-      font-weight: 300;
-      letter-spacing: .05em;
-      line-height: 1;
+      font-weight: 600;
+      line-height: .95;
     }
 
     .date {
-      margin-top: 8px;
+      margin-top: 7px;
       color: var(--muted);
-      font-size: clamp(12px, 1vw, 16px);
+      font-family: var(--english);
+      font-size: 11px;
+      font-weight: 600;
     }
 
-    .notice {
-      display: none;
+    .sync {
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin: -4px 0 14px;
-      padding: 9px 14px;
-      border: 1px solid rgba(226, 178, 86, .35);
-      border-radius: 14px;
-      color: #f4dba8;
-      background: rgba(86, 52, 25, .82);
-      font-size: 14px;
+      gap: 8px;
+      flex: 0 0 auto;
+      min-height: 31px;
+      margin: 8px auto 10px;
+      padding: 4px 15px;
+      border: 1px solid rgba(47,107,69,.14);
+      border-radius: 999px;
+      color: var(--available);
+      background: rgba(228,239,227,.74);
+      font-family: var(--english);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .03em;
     }
 
-    .notice.show { display: flex; }
-    .notice.critical {
-      border-color: rgba(237, 128, 117, .5);
-      color: #ffd1cc;
-      background: rgba(92, 29, 24, .88);
+    .sync.warn {
+      color: var(--last);
+      border-color: rgba(198,162,77,.28);
+      background: #FFF8E8;
     }
 
-    .panel {
+    .sync.error {
+      color: var(--busy);
+      border-color: rgba(166,70,47,.26);
+      background: #FFF0E9;
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px currentColor;
+      opacity: .74;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(var(--card-count, 3), minmax(0, 1fr));
+      gap: clamp(14px, 1.7vw, 26px);
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .card {
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      flex-direction: column;
       overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.035), transparent 20%),
-        rgba(26, 17, 13, .88);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
+      border-radius: 20px;
+      background: var(--card);
+      box-shadow: var(--shadow-lift);
     }
 
-    .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      min-height: 52px;
-      padding: 9px 18px 9px 102px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(14, 10, 8, .35);
-    }
-
-    .legend {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px 18px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .legend-swatch {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-    }
-
-    .legend-swatch.available { background: var(--green); }
-    .legend-swatch.busy { background: var(--red); }
-    .legend-swatch.last { background: var(--amber); }
-    .legend-swatch.closed { background: #77716d; }
-
-    .privacy {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      color: #a9c7b8;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .schedule {
-      display: grid;
-      grid-template-columns: 92px minmax(0, 1fr);
-      min-height: calc(var(--hour-height) * 10 + 104px);
-    }
-
-    .time-rail {
+    .card-top {
       position: relative;
-      margin-top: 104px;
-      height: calc(var(--hour-height) * 10);
-      border-right: 1px solid var(--line-strong);
-      background: rgba(10, 8, 7, .2);
-    }
-
-    .time-label {
-      position: absolute;
-      right: 18px;
-      transform: translateY(-50%);
-      color: #cbbb9e;
-      font-family: "Segoe UI", sans-serif;
-      font-size: 13px;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: .04em;
-    }
-
-    .time-label:first-child { transform: translateY(0); }
-    .time-label:last-child { transform: translateY(-100%); }
-
-    .therapist-grid {
       display: grid;
-      grid-template-columns: repeat(var(--therapist-count, 3), minmax(220px, 1fr));
-      min-width: 0;
-    }
-
-    .therapist-column {
-      min-width: 0;
-      border-right: 1px solid var(--line);
-    }
-
-    .therapist-column:last-child { border-right: 0; }
-
-    .therapist-head {
-      display: grid;
-      grid-template-columns: 54px minmax(0, 1fr);
+      grid-template-columns: 68px minmax(0, 1fr) auto;
       align-items: center;
-      gap: 12px;
-      height: 104px;
-      padding: 13px 16px;
-      border-bottom: 1px solid var(--line-strong);
+      gap: 15px;
+      flex: 0 0 auto;
+      min-height: 102px;
+      padding: 16px 18px;
+      overflow: hidden;
       background:
-        linear-gradient(135deg, rgba(209, 165, 94, .075), transparent 58%),
-        rgba(29, 19, 14, .8);
+        radial-gradient(circle at 12% 10%, rgba(231,206,140,.18), transparent 26%),
+        linear-gradient(120deg, #60402A, #805B3D 58%, #67452E);
+    }
+
+    .card-top::after {
+      content: "";
+      position: absolute;
+      top: -80%;
+      bottom: -80%;
+      left: -45%;
+      width: 35%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      transform: skewX(-18deg);
+      animation: sweep 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes sweep {
+      0%, 68% { left: -45%; }
+      88%, 100% { left: 125%; }
     }
 
     .avatar {
+      position: relative;
+      z-index: 1;
       display: grid;
+      width: 66px;
+      height: 66px;
       place-items: center;
-      width: 54px;
-      height: 54px;
       overflow: hidden;
-      border: 1px solid var(--line-strong);
+      border: 2px solid var(--gold);
       border-radius: 50%;
-      color: var(--gold-soft);
-      background: #332116;
-      font-family: Georgia, serif;
-      font-size: 19px;
-      box-shadow: inset 0 0 0 4px rgba(255,255,255,.025);
+      color: var(--espresso);
+      background: var(--gold-light);
+      box-shadow: 0 0 0 3px rgba(244,238,224,.18), 0 8px 18px rgba(0,0,0,.22);
+      font-family: var(--english);
+      font-size: 21px;
+      font-weight: 700;
     }
 
     .avatar img {
-      display: block;
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .therapist-name {
+    .card-identity { position: relative; z-index: 1; min-width: 0; }
+
+    .name-th {
       overflow: hidden;
-      color: var(--ink);
-      font-size: clamp(18px, 1.6vw, 27px);
-      font-weight: 650;
+      color: #FFF;
+      font-size: clamp(21px, 2vw, 31px);
+      font-weight: 700;
       line-height: 1.15;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .therapist-en {
+    .name-en {
       margin-top: 2px;
       overflow: hidden;
-      color: var(--muted);
-      font-family: Georgia, serif;
-      font-size: 13px;
+      color: var(--gold-light);
+      font-family: var(--english);
+      font-size: 12px;
+      font-weight: 600;
       letter-spacing: .06em;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .status-pill {
+    .pill {
+      position: relative;
+      z-index: 1;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      width: fit-content;
-      max-width: 100%;
-      margin-top: 7px;
-      padding: 4px 9px;
+      max-width: 145px;
+      padding: 7px 11px;
       border-radius: 999px;
-      color: #ddd3c5;
-      background: rgba(255,255,255,.07);
+      font-family: var(--english);
       font-size: 10px;
-      line-height: 1.2;
-      white-space: nowrap;
-    }
-
-    .status-pill.available, .status-pill.open {
-      color: #b9efd4;
-      background: rgba(64, 145, 104, .22);
-    }
-
-    .status-pill.busy {
-      color: #ffd0cc;
-      background: rgba(174, 63, 53, .24);
-    }
-
-    .status-pill.last {
-      color: #ffe3a4;
-      background: rgba(173, 116, 25, .26);
-    }
-
-    .status-pill.closed {
-      color: #cbc3bb;
-      background: rgba(100, 96, 92, .24);
-    }
-
-    .timeline {
-      position: relative;
-      height: calc(var(--hour-height) * 10);
-      overflow: hidden;
-      background:
-        linear-gradient(to bottom, var(--line) 1px, transparent 1px);
-      background-size: 100% var(--hour-height);
-    }
-
-    .timeline::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(90deg, rgba(255,255,255,.012), transparent 50%, rgba(255,255,255,.01));
-    }
-
-    .booking {
-      position: absolute;
-      z-index: 3;
-      left: 10px;
-      right: 10px;
-      min-height: 28px;
-      overflow: hidden;
-      border: 1px solid rgba(237, 128, 117, .5);
-      border-left: 4px solid var(--red);
-      border-radius: 10px;
-      color: #ffe4e1;
-      background:
-        linear-gradient(110deg, rgba(188, 65, 55, .34), rgba(91, 31, 28, .72));
-      box-shadow: 0 7px 18px rgba(0,0,0,.24);
-    }
-
-    .booking.last {
-      border-color: rgba(226, 178, 86, .58);
-      border-left-color: var(--amber);
-      color: #ffe7b5;
-      background:
-        linear-gradient(110deg, rgba(160, 105, 26, .4), rgba(77, 50, 17, .78));
-    }
-
-    .booking-inner {
-      display: flex;
-      height: 100%;
-      min-height: 28px;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 5px 9px;
-    }
-
-    .booking-status {
-      overflow: hidden;
-      font-size: clamp(10px, .9vw, 13px);
-      font-weight: 650;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .booking-time {
-      flex: 0 0 auto;
-      font-family: "Segoe UI", sans-serif;
-      font-size: clamp(10px, .83vw, 12px);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-
-    .now-line {
-      position: absolute;
-      z-index: 5;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gold-soft);
-      box-shadow: 0 0 10px rgba(241, 217, 156, .72);
-      pointer-events: none;
-    }
-
-    .now-line::before {
-      content: "";
-      position: absolute;
-      left: -4px;
-      top: -4px;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--gold-soft);
-    }
-
-    .empty-state {
-      display: grid;
-      min-height: 560px;
-      place-items: center;
-      padding: 32px;
+      font-weight: 700;
+      line-height: 1.15;
       text-align: center;
     }
 
-    .empty-card {
-      max-width: 620px;
-      padding: 30px;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      color: var(--muted);
-      background: rgba(255,255,255,.025);
+    .pill-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+
+    .pill.available, .pill.open { color: var(--available); background: var(--available-bg); }
+    .pill.busy { color: var(--busy); background: var(--busy-bg); }
+    .pill.last { color: var(--last); background: var(--last-bg); }
+    .pill.closed { color: var(--closed); background: var(--closed-bg); }
+
+    .card-body {
+      display: flex;
+      min-height: 0;
+      flex: 1 1 auto;
+      flex-direction: column;
+      padding: clamp(14px, 1.45vw, 22px);
     }
 
-    .empty-card strong {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--gold-soft);
-      font-size: 20px;
+    .current-panel {
+      position: relative;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      align-items: center;
+      gap: 14px;
+      flex: 0 0 auto;
+      min-height: 170px;
+      padding: 15px 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #FFF;
     }
+
+    .current-panel.available { border-color: rgba(47,107,69,.19); background: linear-gradient(145deg, rgba(228,239,227,.74), #FFF); }
+    .current-panel.busy { border-color: rgba(166,70,47,.20); background: linear-gradient(145deg, rgba(244,228,222,.82), #FFF); }
+    .current-panel.last { border-color: rgba(198,162,77,.32); background: linear-gradient(145deg, rgba(255,243,211,.92), #FFF); }
+    .current-panel.closed { border-color: rgba(98,93,88,.16); background: linear-gradient(145deg, rgba(234,228,216,.78), #FFF); }
+
+    .status-icon {
+      display: grid;
+      width: 52px;
+      height: 52px;
+      place-items: center;
+      border-radius: 50%;
+      font-family: var(--english);
+      font-size: 23px;
+      font-weight: 800;
+    }
+
+    .available .status-icon { color: var(--available); background: var(--available-bg); }
+    .busy .status-icon { color: var(--busy); background: var(--busy-bg); }
+    .last .status-icon { color: var(--last); background: var(--last-bg); }
+    .closed .status-icon { color: var(--closed); background: var(--closed-bg); }
+
+    .current-copy { min-width: 0; }
+
+    .status-label {
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .status-title {
+      margin-top: 2px;
+      font-size: clamp(22px, 2.05vw, 34px);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .available .status-title { color: var(--available); }
+    .busy .status-title { color: var(--busy); }
+    .last .status-title { color: var(--last); }
+    .closed .status-title { color: var(--closed); }
+
+    .status-en {
+      margin-top: 1px;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .primary-time {
+      margin-top: 10px;
+      color: var(--espresso);
+      font-family: var(--clock);
+      font-size: clamp(26px, 2.65vw, 44px);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      letter-spacing: .025em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .primary-caption {
+      margin-top: 5px;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .upcoming-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+      margin: 14px 0 8px;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    .upcoming-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .queue-list {
+      display: grid;
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .queue-item {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--bg-2);
+    }
+
+    .queue-item.empty {
+      border-style: dashed;
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .queue-time {
+      flex: 0 0 auto;
+      color: var(--espresso);
+      font-family: var(--clock);
+      font-size: clamp(16px, 1.45vw, 24px);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .queue-copy { min-width: 0; }
+
+    .queue-th {
+      color: var(--espresso);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .queue-en {
+      margin-top: 2px;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 9px;
+      font-weight: 600;
+    }
+
+    .queue-marker {
+      width: 8px;
+      height: 34px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--busy);
+    }
+
+    .queue-item.last .queue-marker { background: var(--gold); }
+    .queue-item.last .queue-th { color: var(--last); }
 
     .footer {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      gap: 18px;
-      padding: 13px 6px 0;
-      color: #827970;
-      font-size: 11px;
-      letter-spacing: .03em;
+      gap: 20px;
+      flex: 0 0 auto;
+      min-height: 59px;
+      margin-top: 10px;
+      padding: 9px 17px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,253,248,.76);
+      box-shadow: var(--shadow);
     }
 
-    .footer span:last-child { text-align: right; }
+    .reception {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--espresso);
+      font-size: 15px;
+      font-weight: 700;
+    }
 
-    @media (max-width: 900px) {
-      .topbar {
-        grid-template-columns: 1fr auto;
-      }
-      .spa-state { display: none; }
-      .schedule { grid-template-columns: 72px minmax(0, 1fr); }
-      .panel-head { padding-left: 80px; }
-      .time-label { right: 12px; }
-      .therapist-grid { overflow-x: auto; }
-      .therapist-column { min-width: 240px; }
+    .reception-icon {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 50%;
+      color: #FFF8E8;
+      background: linear-gradient(160deg, var(--espresso), var(--espresso-2));
+      font-family: var(--english);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .reception-en {
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .updated {
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 9px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .empty-screen {
+      display: grid;
+      grid-column: 1 / -1;
+      place-items: center;
+      min-height: 280px;
+      border: 1px dashed var(--line);
+      border-radius: 20px;
+      color: var(--muted);
+      background: rgba(255,253,248,.6);
+      text-align: center;
     }
 
     @media (max-height: 760px) {
-      :root { --hour-height: 42px; }
-      .app { padding-top: 14px; padding-bottom: 12px; }
-      .mark { width: 66px; height: 66px; border-radius: 20px 8px 20px 8px; font-size: 26px; }
-      .topbar { margin-bottom: 12px; }
-      .therapist-head { height: 88px; }
-      .time-rail { margin-top: 88px; }
-      .schedule { min-height: calc(var(--hour-height) * 10 + 88px); }
-      .avatar { width: 46px; height: 46px; }
-      .therapist-head { grid-template-columns: 46px minmax(0,1fr); }
-      .footer { padding-top: 8px; }
+      .display { padding-top: 12px; padding-bottom: 12px; }
+      .header { padding-bottom: 10px; }
+      .logo { width: 70px; height: 56px; font-size: 27px; }
+      .sync { margin: 6px auto 8px; min-height: 27px; }
+      .card-top { min-height: 82px; padding: 10px 14px; grid-template-columns: 55px minmax(0,1fr) auto; }
+      .avatar { width: 54px; height: 54px; }
+      .current-panel { min-height: 132px; padding: 10px 12px; }
+      .card-body { padding-top: 11px; padding-bottom: 11px; }
+      .upcoming-title { margin-top: 9px; }
+      .footer { min-height: 48px; margin-top: 7px; }
     }
 
-    @media (prefers-reduced-motion: no-preference) {
-      .dot { animation: breathe 2.8s ease-in-out infinite; }
-      @keyframes breathe {
-        50% { transform: scale(1.16); opacity: .72; }
-      }
-    }
-  
-    /* 42C original light palette */
-    :root {
-      --ink: #241811;
-      --muted: #82735F;
-      --night: #F4EEE0;
-      --brown-950: #FFFDF8;
-      --brown-900: #F4EEE0;
-      --brown-800: #EFE6D3;
-      --brown-700: #6B4A32;
-      --gold: #C6A24D;
-      --gold-soft: #7D5B3F;
-      --line: rgba(36, 24, 17, .12);
-      --line-strong: rgba(107, 74, 50, .24);
-      --green: #2F6B45;
-      --red: #A6462F;
-      --amber: #B58A33;
-      --blue: #557D8B;
-      --shadow: 0 1px 2px rgba(36,24,17,.06), 0 18px 40px -18px rgba(36,24,17,.30);
+    @media (max-width: 900px) {
+      html, body { height: auto; min-height: 100%; overflow: auto; }
+      .display { min-height: 100vh; }
+      .header { grid-template-columns: 1fr auto; }
+      .welcome { display: none; }
+      .grid { grid-template-columns: 1fr; }
+      .card { min-height: 500px; }
     }
 
-    html { color-scheme: light; }
-
-    body {
-      background:
-        radial-gradient(1200px 600px at 90% -10%, rgba(198,162,77,.10), transparent 60%),
-        radial-gradient(900px 500px at -5% 110%, rgba(198,162,77,.08), transparent 55%),
-        var(--night);
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
     }
-
-    body::before {
-      opacity: .22;
-      background-image:
-        linear-gradient(115deg, transparent 0 48%, rgba(107,74,50,.028) 49%, transparent 50%),
-        linear-gradient(25deg, transparent 0 48%, rgba(198,162,77,.034) 49%, transparent 50%);
-    }
-
-    .mark {
-      color: var(--espresso, #6B4A32);
-      background:
-        linear-gradient(145deg, rgba(231,206,140,.28), rgba(255,255,255,.72)),
-        #FFFDF8;
-      box-shadow: inset 0 1px rgba(255,255,255,.9), var(--shadow);
-    }
-
-    .mark em { color: #B85B40; }
-
-    .spa-state {
-      color: var(--muted);
-      background: rgba(255,253,248,.88);
-      box-shadow: 0 10px 28px -22px rgba(36,24,17,.5);
-    }
-
-    .notice {
-      border-color: rgba(198,162,77,.32);
-      color: #8A6424;
-      background: #FFF8E8;
-      box-shadow: 0 6px 18px -14px rgba(154,108,28,.5);
-    }
-
-    .notice.critical {
-      border-color: rgba(166,70,47,.30);
-      color: #94442F;
-      background: #FFF0E9;
-    }
-
-    .panel {
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.72), transparent 24%),
-        rgba(255,253,248,.94);
-    }
-
-    .panel-head {
-      background: rgba(239,230,211,.58);
-    }
-
-    .privacy { color: #2F6B45; }
-
-    .time-rail {
-      background: rgba(244,238,224,.56);
-    }
-
-    .time-label { color: #6B4A32; }
-
-    .therapist-head {
-      background:
-        linear-gradient(135deg, rgba(198,162,77,.10), transparent 58%),
-        rgba(255,253,248,.94);
-    }
-
-    .avatar {
-      color: #6B4A32;
-      background: #EFE6D3;
-      box-shadow:
-        inset 0 0 0 4px rgba(255,255,255,.46),
-        0 10px 24px -18px rgba(36,24,17,.65);
-    }
-
-    .status-pill {
-      color: #5B4A3B;
-      background: rgba(107,74,50,.08);
-    }
-
-    .status-pill.available,
-    .status-pill.open {
-      color: #2F6B45;
-      background: #E4EFE3;
-    }
-
-    .status-pill.busy {
-      color: #8F3C2B;
-      background: #F4E4DE;
-    }
-
-    .status-pill.last {
-      color: #8A6424;
-      background: #FFF3D3;
-    }
-
-    .status-pill.closed {
-      color: #5F5A55;
-      background: #EAE4D8;
-    }
-
-    .timeline {
-      background-color: #FFFDF8;
-    }
-
-    .timeline::after {
-      background:
-        linear-gradient(90deg, rgba(198,162,77,.025), transparent 50%, rgba(107,74,50,.018));
-    }
-
-    .booking {
-      border-color: rgba(166,70,47,.32);
-      border-left-color: #A6462F;
-      color: #6B3429;
-      background:
-        linear-gradient(110deg, #F4E4DE, rgba(255,253,248,.94));
-      box-shadow: 0 9px 22px -16px rgba(107,74,50,.64);
-    }
-
-    .booking.last {
-      border-color: rgba(198,162,77,.42);
-      border-left-color: #C6A24D;
-      color: #74531F;
-      background:
-        linear-gradient(110deg, #FFF3D3, rgba(255,253,248,.96));
-    }
-
-    .now-line {
-      background: #C6A24D;
-      box-shadow: 0 0 10px rgba(198,162,77,.62);
-    }
-
-    .now-line::before { background: #C6A24D; }
-
-    .empty-card {
-      color: var(--muted);
-      background: rgba(255,253,248,.72);
-      box-shadow: 0 12px 30px -24px rgba(36,24,17,.55);
-    }
-
-    .footer { color: #82735F; }
-
   </style>
 </head>
 <body>
-  <main class="app">
-    <header class="topbar">
+  <main class="display">
+    <header class="header">
       <div class="brand">
-        <div class="mark" aria-label="42C">42<em>C</em></div>
+        <div class="logo">42<em>C</em></div>
         <div>
-          <div class="eyebrow" id="hotel-name">The Chic Hotel</div>
-          <h1>
-            <span id="title-en">SPA QUEUE</span>
-            <span class="title-th" id="title-th">ตารางคิวสปา</span>
-          </h1>
+          <div class="hotel" id="hotel-name">The Chic Hotel</div>
+          <div class="brand-sub">SPA &amp; WELLNESS</div>
         </div>
       </div>
 
-      <div class="spa-state" id="spa-state">
-        <span class="dot"></span>
-        <span>กำลังตรวจสอบ / Checking</span>
+      <div class="welcome">
+        <div class="welcome-th" id="title-th">ยินดีต้อนรับสู่บริการสปา</div>
+        <div class="welcome-en" id="title-en">Please check therapist availability</div>
+        <div class="hours">OPEN DAILY · 14:00–23:00</div>
       </div>
 
       <div class="datetime">
         <div class="clock" id="clock">--:--</div>
-        <div class="date" id="date">Asia/Bangkok</div>
+        <div class="date" id="date">ASIA/BANGKOK</div>
       </div>
     </header>
 
-    <div class="notice" id="notice" role="status" aria-live="polite"></div>
+    <div class="sync" id="sync" role="status" aria-live="polite">
+      <span class="sync-dot"></span>
+      <span id="sync-text">กำลังอัปเดตข้อมูลคิว · Updating queue information</span>
+    </div>
 
-    <section class="panel" aria-label="Spa queue schedule">
-      <div class="panel-head">
-        <div class="legend" aria-label="Status legend">
-          <span class="legend-item"><span class="legend-swatch available"></span>ว่าง / Available</span>
-          <span class="legend-item"><span class="legend-swatch busy"></span>ไม่ว่าง / Occupied</span>
-          <span class="legend-item"><span class="legend-swatch last"></span>คิวสุดท้าย / Last Booking</span>
-          <span class="legend-item"><span class="legend-swatch closed"></span>ปิด / Closed</span>
-        </div>
-        <div class="privacy">● Public display · No personal data</div>
-      </div>
-
-      <div id="schedule-root">
-        <div class="empty-state">
-          <div class="empty-card">
-            <strong>กำลังเชื่อมต่อระบบ / Connecting</strong>
-            กรุณารอสักครู่
-          </div>
-        </div>
-      </div>
+    <section class="grid" id="card-grid" aria-label="Spa therapist queue">
+      <div class="empty-screen">กำลังโหลดข้อมูลคิว · Loading queue</div>
     </section>
 
     <footer class="footer">
-      <span id="updated">ยังไม่ได้รับข้อมูล / No data received</span>
-      <span>42C Spa Queue V2 · ข้อมูลส่วนตัวไม่แสดงบนหน้าสาธารณะ</span>
+      <div class="reception">
+        <span class="reception-icon">FO</span>
+        <span>
+          สามารถจองคิวได้ที่ Front Reception
+          <span class="reception-en">Please book your appointment at Front Reception</span>
+        </span>
+      </div>
+      <div class="updated" id="updated">PUBLIC DISPLAY · NO PERSONAL DATA</div>
     </footer>
   </main>
 
@@ -775,16 +651,17 @@
 
       var fallbackConfig = {
         apiUrl: '',
+        preview: false,
         refreshMs: 10000,
         staleAfterMs: 35000,
         criticalAfterMs: 120000,
         hotelName: 'The Chic Hotel',
-        displayTitleTh: 'ตารางคิวสปา',
-        displayTitleEn: 'SPA QUEUE'
+        displayTitleTh: 'ยินดีต้อนรับสู่บริการสปา',
+        displayTitleEn: 'Please check therapist availability'
       };
       var config = Object.assign({}, fallbackConfig, window.SPA_DISPLAY_CONFIG || {});
-      var lastSuccessAt = 0;
       var latestState = null;
+      var lastSuccessAt = 0;
       var requestRunning = false;
 
       var statusClassMap = {
@@ -807,7 +684,7 @@
         return document.getElementById(id);
       }
 
-      function safeText(value) {
+      function text(value) {
         return value === null || value === undefined ? '' : String(value);
       }
 
@@ -815,6 +692,18 @@
         byId('hotel-name').textContent = config.hotelName;
         byId('title-th').textContent = config.displayTitleTh;
         byId('title-en').textContent = config.displayTitleEn;
+      }
+
+      function bangkokMinutes() {
+        var parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Bangkok',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }).formatToParts(new Date());
+        var values = {};
+        parts.forEach(function (part) { values[part.type] = part.value; });
+        return Number(values.hour) * 60 + Number(values.minute);
       }
 
       function updateClock() {
@@ -842,266 +731,288 @@
         }).format(now);
 
         byId('date').textContent = thaiDate + ' · ' + englishDate;
-        updateNowLines();
       }
 
-      function updateConnectionState() {
-        var notice = byId('notice');
+      function setSync(kind, message) {
+        var sync = byId('sync');
+        sync.className = 'sync' + (kind ? ' ' + kind : '');
+        byId('sync-text').textContent = message;
+      }
+
+      function monitorConnection() {
         if (!lastSuccessAt) return;
         var age = Date.now() - lastSuccessAt;
-
         if (age >= config.criticalAfterMs) {
-          notice.className = 'notice show critical';
-          notice.textContent = 'การเชื่อมต่อขัดข้อง กำลังใช้ข้อมูลล่าสุด / Connection interrupted — showing last known status';
+          setSync('error', 'การเชื่อมต่อขัดข้อง · Showing last known status');
         } else if (age >= config.staleAfterMs) {
-          notice.className = 'notice show';
-          notice.textContent = 'กำลังตรวจสอบข้อมูลล่าสุด / Checking latest queue data';
+          setSync('warn', 'กำลังตรวจสอบข้อมูลล่าสุด · Checking latest queue');
         } else {
-          notice.className = 'notice';
-          notice.textContent = '';
+          setSync('', config.preview ? 'ข้อมูลตัวอย่าง · Preview data' : 'ข้อมูลคิวเป็นปัจจุบัน · Queue data is current');
         }
-      }
-
-      function renderSetupRequired() {
-        byId('schedule-root').innerHTML =
-          '<div class="empty-state"><div class="empty-card">' +
-          '<strong>รอการเชื่อมต่อ Web App / Setup required</strong>' +
-          'กรุณาใส่ Google Apps Script Web App URL ในไฟล์ config.js' +
-          '</div></div>';
-        setSpaState('ปิดห้องสปา', 'Waiting for setup');
-      }
-
-      function renderError(message) {
-        byId('schedule-root').innerHTML =
-          '<div class="empty-state"><div class="empty-card">' +
-          '<strong>กำลังตรวจสอบระบบ / Checking system</strong>' +
-          escapeHtml(message || 'ไม่สามารถอ่านข้อมูลได้ในขณะนี้') +
-          '</div></div>';
-        setSpaState('', 'Checking');
-      }
-
-      function setSpaState(status, englishOverride) {
-        var element = byId('spa-state');
-        var css = statusClassMap[status] || '';
-        var english = englishOverride || statusEnglishMap[status] || 'Checking';
-        element.className = 'spa-state ' + css;
-        element.querySelector('span:last-child').textContent =
-          (status || 'กำลังตรวจสอบ') + ' / ' + english;
       }
 
       function renderState(state) {
         latestState = state;
-        setSpaState(state.spaStatus, statusEnglishMap[state.spaStatus]);
         var therapists = Array.isArray(state.therapists) ? state.therapists : [];
+        var grid = byId('card-grid');
+        grid.style.setProperty('--card-count', String(Math.max(therapists.length, 1)));
+        grid.replaceChildren();
+
         if (!therapists.length) {
-          byId('schedule-root').innerHTML =
-            '<div class="empty-state"><div class="empty-card">' +
-            '<strong>วันนี้ไม่มีหมอนวดเข้าเวร / No therapist on duty</strong>' +
-            'ตรวจสอบคอลัมน์ Working_Today ในแท็บตารางเวลาหมอนวด' +
-            '</div></div>';
+          var empty = document.createElement('div');
+          empty.className = 'empty-screen';
+          empty.textContent = 'ยังไม่มีข้อมูลหมอนวด · No therapist information';
+          grid.appendChild(empty);
           return;
         }
 
-        var wrapper = document.createElement('div');
-        wrapper.className = 'schedule';
-
-        var timeRail = document.createElement('aside');
-        timeRail.className = 'time-rail';
-        for (var hour = 14; hour <= 24; hour++) {
-          var timeLabel = document.createElement('span');
-          timeLabel.className = 'time-label';
-          timeLabel.style.top = ((hour - 14) / 10 * 100) + '%';
-          timeLabel.textContent = pad2(hour % 24) + ':00';
-          timeRail.appendChild(timeLabel);
-        }
-        wrapper.appendChild(timeRail);
-
-        var grid = document.createElement('div');
-        grid.className = 'therapist-grid';
-        grid.style.setProperty('--therapist-count', String(therapists.length));
-
         therapists.forEach(function (therapist) {
-          grid.appendChild(renderTherapist(therapist));
+          grid.appendChild(renderCard(therapist));
         });
 
-        wrapper.appendChild(grid);
-        byId('schedule-root').replaceChildren(wrapper);
         byId('updated').textContent =
-          'อัปเดตล่าสุด ' + formatBangkokTime(state.generatedAt) +
-          ' · Last updated ' + formatBangkokTime(state.generatedAt);
-        updateNowLines();
+          (config.preview ? 'PREVIEW · ' : '') +
+          'อัปเดตล่าสุด ' + formatTime(state.generatedAt) +
+          ' · NO PERSONAL DATA';
       }
 
-      function renderTherapist(therapist) {
-        var column = document.createElement('article');
-        column.className = 'therapist-column';
+      function renderCard(therapist) {
+        var status = therapist.workingToday === false ? 'ปิดห้องสปา' : (therapist.currentStatus || 'ว่าง');
+        var statusClass = statusClassMap[status] || 'closed';
+        var bookings = Array.isArray(therapist.bookings) ? therapist.bookings.slice() : [];
+        bookings.sort(function (a, b) { return Number(a.startMinutes) - Number(b.startMinutes); });
 
-        var head = document.createElement('header');
-        head.className = 'therapist-head';
+        var now = bangkokMinutes();
+        var adjustedNow = now < 14 * 60 ? now + 1440 : now;
+        var active = bookings.find(function (booking) {
+          return adjustedNow >= Number(booking.startMinutes) && adjustedNow < Number(booking.endMinutes);
+        });
+
+        if (!active && (status === 'ไม่ว่าง' || status === 'คิวสุดท้ายของวัน')) {
+          active = bookings.find(function (booking) {
+            return status === 'คิวสุดท้ายของวัน' ?
+              booking.status === 'คิวสุดท้ายของวัน' : true;
+          }) || null;
+        }
+
+        var upcoming = bookings.filter(function (booking) {
+          return booking !== active && Number(booking.endMinutes) > adjustedNow;
+        }).slice(0, 3);
+
+        if (config.preview && !upcoming.length) {
+          upcoming = bookings.filter(function (booking) { return booking !== active; }).slice(0, 3);
+        }
+
+        var card = document.createElement('article');
+        card.className = 'card state-' + statusClass;
+
+        var top = document.createElement('header');
+        top.className = 'card-top';
 
         var avatar = document.createElement('div');
         avatar.className = 'avatar';
         avatar.textContent = initials(therapist.nameEn || therapist.nameTh);
         if (therapist.photoUrl) {
           var image = document.createElement('img');
-          image.alt = '';
           image.src = therapist.photoUrl;
+          image.alt = '';
           image.referrerPolicy = 'no-referrer';
-          image.addEventListener('error', function () {
-            image.remove();
-          });
+          image.addEventListener('error', function () { image.remove(); });
           avatar.appendChild(image);
         }
 
         var identity = document.createElement('div');
-        var name = document.createElement('div');
-        name.className = 'therapist-name';
-        name.textContent = safeText(therapist.nameTh) || ('หมอนวด ' + safeText(therapist.id));
-
-        var english = document.createElement('div');
-        english.className = 'therapist-en';
-        english.textContent = safeText(therapist.nameEn) || ('Therapist ' + safeText(therapist.id));
+        identity.className = 'card-identity';
+        var nameTh = document.createElement('div');
+        nameTh.className = 'name-th';
+        nameTh.textContent = text(therapist.nameTh) || ('หมอนวด ' + text(therapist.id));
+        var nameEn = document.createElement('div');
+        nameEn.className = 'name-en';
+        nameEn.textContent = text(therapist.nameEn) || ('Therapist ' + text(therapist.id));
+        identity.appendChild(nameTh);
+        identity.appendChild(nameEn);
 
         var pill = document.createElement('div');
-        var status = therapist.currentStatus || 'ว่าง';
-        pill.className = 'status-pill ' + (statusClassMap[status] || '');
-        pill.textContent = status + ' · ' +
-          (therapist.currentStatusEn || statusEnglishMap[status] || 'Checking');
+        pill.className = 'pill ' + statusClass;
+        var dot = document.createElement('span');
+        dot.className = 'pill-dot';
+        var pillText = document.createElement('span');
+        pillText.textContent = status + ' · ' + (therapist.currentStatusEn || statusEnglishMap[status] || 'Closed');
+        pill.appendChild(dot);
+        pill.appendChild(pillText);
 
-        identity.appendChild(name);
-        identity.appendChild(english);
-        identity.appendChild(pill);
-        head.appendChild(avatar);
-        head.appendChild(identity);
-        column.appendChild(head);
+        top.appendChild(avatar);
+        top.appendChild(identity);
+        top.appendChild(pill);
 
-        var timeline = document.createElement('div');
-        timeline.className = 'timeline';
+        var body = document.createElement('div');
+        body.className = 'card-body';
+        body.appendChild(renderCurrentPanel(status, statusClass, active, upcoming));
 
-        var bookings = Array.isArray(therapist.bookings) ? therapist.bookings : [];
-        bookings.forEach(function (booking) {
-          var element = renderBooking(booking);
-          if (element) timeline.appendChild(element);
-        });
+        var upcomingTitle = document.createElement('div');
+        upcomingTitle.className = 'upcoming-title';
+        upcomingTitle.textContent = 'คิวถัดไป · Upcoming queue';
+        body.appendChild(upcomingTitle);
 
-        column.appendChild(timeline);
-        return column;
+        var list = document.createElement('div');
+        list.className = 'queue-list';
+
+        if (statusClass === 'closed') {
+          list.appendChild(renderEmptyQueue('วันนี้ไม่รับคิว · Not accepting bookings today'));
+          list.appendChild(renderEmptyQueue('ปิดห้องสปา · Spa closed'));
+          list.appendChild(renderEmptyQueue('เปิดอีกครั้งตามวันทำงาน · Opens on next working day'));
+        } else {
+          upcoming.forEach(function (booking) {
+            list.appendChild(renderQueueItem(booking));
+          });
+          while (list.children.length < 3) {
+            list.appendChild(renderEmptyQueue(
+              list.children.length === 0 ?
+                'ยังไม่มีคิวจองเพิ่มเติม · No more bookings' :
+                'ช่วงเวลาว่าง · Available period'
+            ));
+          }
+        }
+
+        body.appendChild(list);
+        card.appendChild(top);
+        card.appendChild(body);
+        return card;
       }
 
-      function renderBooking(booking) {
-        var start = Number(booking.startMinutes);
-        var end = Number(booking.endMinutes);
-        if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
-        if (end <= start) end += 1440;
+      function renderCurrentPanel(status, statusClass, active, upcoming) {
+        var panel = document.createElement('section');
+        panel.className = 'current-panel ' + statusClass;
 
-        var visibleStart = Math.max(14 * 60, start);
-        var visibleEnd = Math.min(24 * 60, end);
-        if (visibleEnd <= visibleStart) return null;
+        var icon = document.createElement('div');
+        icon.className = 'status-icon';
+        icon.textContent = statusClass === 'available' || statusClass === 'open' ? '✓' :
+          statusClass === 'busy' ? '•' :
+          statusClass === 'last' ? '★' : '—';
 
-        var top = (visibleStart - 14 * 60) / (10 * 60) * 100;
-        var height = (visibleEnd - visibleStart) / (10 * 60) * 100;
-        var status = booking.status || 'ไม่ว่าง';
+        var copy = document.createElement('div');
+        copy.className = 'current-copy';
 
-        var block = document.createElement('div');
-        block.className = 'booking ' + (status === 'คิวสุดท้ายของวัน' ? 'last' : '');
-        block.style.top = top + '%';
-        block.style.height = height + '%';
-        block.setAttribute('aria-label',
-          status + ' ' + safeText(booking.start) + ' ถึง ' + safeText(booking.end));
+        var label = document.createElement('div');
+        label.className = 'status-label';
+        label.textContent = 'สถานะปัจจุบัน · Current status';
 
-        var inner = document.createElement('div');
-        inner.className = 'booking-inner';
+        var title = document.createElement('div');
+        title.className = 'status-title';
+        var english = document.createElement('div');
+        english.className = 'status-en';
+        var primary = document.createElement('div');
+        primary.className = 'primary-time';
+        var caption = document.createElement('div');
+        caption.className = 'primary-caption';
 
-        var statusText = document.createElement('span');
-        statusText.className = 'booking-status';
-        statusText.textContent =
-          status === 'คิวสุดท้ายของวัน' ? 'คิวสุดท้าย · Last' : 'ไม่ว่าง · Occupied';
+        if (statusClass === 'busy' || statusClass === 'last') {
+          title.textContent = statusClass === 'last' ? 'คิวสุดท้ายของวัน' : 'ไม่ว่าง';
+          english.textContent = statusClass === 'last' ? 'LAST BOOKING OF THE DAY' : 'CURRENTLY OCCUPIED';
+          primary.textContent = active ? text(active.start) + '–' + text(active.end) : 'กำลังให้บริการ';
+          caption.textContent = active ? 'เวลาเริ่ม–สิ้นสุดจริง · Actual service time' : 'IN SERVICE';
+        } else if (statusClass === 'closed') {
+          title.textContent = 'ปิดห้องสปา';
+          english.textContent = 'SPA CLOSED / DAY OFF';
+          primary.textContent = '—';
+          caption.textContent = 'วันนี้ไม่รับคิว · Not accepting bookings today';
+        } else {
+          var next = upcoming[0] || null;
+          title.textContent = 'ว่าง';
+          english.textContent = 'AVAILABLE NOW';
+          primary.textContent = next ? 'ถึง ' + text(next.start) : 'ถึง 23:00';
+          caption.textContent = next ? 'ว่างจนถึงคิวถัดไป · Available until next booking' : 'พร้อมรับคิว · Ready for service';
+        }
 
-        var timeText = document.createElement('span');
-        timeText.className = 'booking-time';
-        timeText.textContent = safeText(booking.start) + '–' + safeText(booking.end);
-
-        inner.appendChild(statusText);
-        inner.appendChild(timeText);
-        block.appendChild(inner);
-        return block;
+        copy.appendChild(label);
+        copy.appendChild(title);
+        copy.appendChild(english);
+        copy.appendChild(primary);
+        copy.appendChild(caption);
+        panel.appendChild(icon);
+        panel.appendChild(copy);
+        return panel;
       }
 
-      function updateNowLines() {
-        var lines = document.querySelectorAll('.now-line');
-        lines.forEach(function (line) { line.remove(); });
+      function renderQueueItem(booking) {
+        var item = document.createElement('div');
+        var isLast = booking.status === 'คิวสุดท้ายของวัน';
+        item.className = 'queue-item' + (isLast ? ' last' : '');
 
-        var parts = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Asia/Bangkok',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }).formatToParts(new Date());
+        var marker = document.createElement('span');
+        marker.className = 'queue-marker';
 
-        var values = {};
-        parts.forEach(function (part) { values[part.type] = part.value; });
-        var minutes = Number(values.hour) * 60 + Number(values.minute);
-        if (minutes < 14 * 60 || minutes > 24 * 60) return;
+        var time = document.createElement('div');
+        time.className = 'queue-time';
+        time.textContent = text(booking.start) + '–' + text(booking.end);
 
-        var top = (minutes - 14 * 60) / (10 * 60) * 100;
-        document.querySelectorAll('.timeline').forEach(function (timeline) {
-          var line = document.createElement('div');
-          line.className = 'now-line';
-          line.style.top = top + '%';
-          timeline.appendChild(line);
-        });
+        var copy = document.createElement('div');
+        copy.className = 'queue-copy';
+        var th = document.createElement('div');
+        th.className = 'queue-th';
+        th.textContent = isLast ? 'คิวสุดท้ายของวัน' : 'มีคิวจองแล้ว';
+        var en = document.createElement('div');
+        en.className = 'queue-en';
+        en.textContent = isLast ? 'LAST BOOKING' : 'BOOKED';
+        copy.appendChild(th);
+        copy.appendChild(en);
+
+        item.appendChild(marker);
+        item.appendChild(time);
+        item.appendChild(copy);
+        return item;
       }
 
+      function renderEmptyQueue(message) {
+        var item = document.createElement('div');
+        item.className = 'queue-item empty';
+        var marker = document.createElement('span');
+        marker.className = 'queue-marker';
+        marker.style.background = '#C9BDAA';
+        var copy = document.createElement('div');
+        copy.className = 'queue-copy';
+        var th = document.createElement('div');
+        th.className = 'queue-th';
+        th.textContent = message;
+        copy.appendChild(th);
+        item.appendChild(marker);
+        item.appendChild(copy);
+        return item;
+      }
+
+      function renderSetup() {
+        var grid = byId('card-grid');
+        grid.innerHTML = '<div class="empty-screen">รอการเชื่อมต่อ Web App · Setup required</div>';
+        setSync('warn', 'กรุณาใส่ Apps Script Web App URL ใน config.js');
+      }
 
       function buildPreviewState() {
         return {
           ok: true,
-          version: '2.0.2-preview',
+          version: '2.1.0-preview',
           generatedAt: new Date().toISOString(),
           timezone: 'Asia/Bangkok',
-          businessDate: '2026-08-27',
           spaStatus: 'เปิดห้องสปา',
-          schedule: {
-            start: '14:00',
-            end: '24:00',
-            slots: ['14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00']
-          },
           therapists: [
             {
-              id: '1',
-              nameTh: 'ภา',
-              nameEn: 'Pa',
-              photoUrl: '',
-              workingToday: true,
-              currentStatus: 'ไม่ว่าง',
-              currentStatusEn: 'Occupied',
+              id: '1', nameTh: 'ภา', nameEn: 'Pa', photoUrl: '', workingToday: true,
+              currentStatus: 'ไม่ว่าง', currentStatusEn: 'Occupied',
               bookings: [
-                { start: '14:13', end: '15:43', startMinutes: 853, endMinutes: 943, status: 'ไม่ว่าง', statusEn: 'Occupied' },
-                { start: '18:20', end: '19:50', startMinutes: 1100, endMinutes: 1190, status: 'คิวสุดท้ายของวัน', statusEn: 'Last Booking' }
+                { start: '14:13', end: '15:43', startMinutes: 853, endMinutes: 943, status: 'ไม่ว่าง' },
+                { start: '18:20', end: '19:50', startMinutes: 1100, endMinutes: 1190, status: 'คิวสุดท้ายของวัน' }
               ]
             },
             {
-              id: '2',
-              nameTh: 'เมล',
-              nameEn: 'Mel',
-              photoUrl: '',
-              workingToday: true,
-              currentStatus: 'ว่าง',
-              currentStatusEn: 'Available',
+              id: '2', nameTh: 'เมล', nameEn: 'Mel', photoUrl: '', workingToday: true,
+              currentStatus: 'ว่าง', currentStatusEn: 'Available',
               bookings: [
-                { start: '16:10', end: '17:40', startMinutes: 970, endMinutes: 1060, status: 'ไม่ว่าง', statusEn: 'Occupied' },
-                { start: '22:00', end: '00:00', startMinutes: 1320, endMinutes: 1440, status: 'คิวสุดท้ายของวัน', statusEn: 'Last Booking' }
+                { start: '16:10', end: '17:40', startMinutes: 970, endMinutes: 1060, status: 'ไม่ว่าง' },
+                { start: '22:00', end: '00:00', startMinutes: 1320, endMinutes: 1440, status: 'คิวสุดท้ายของวัน' }
               ]
             },
             {
-              id: '3',
-              nameTh: 'จอย',
-              nameEn: 'Joy',
-              photoUrl: '',
-              workingToday: false,
-              currentStatus: 'ปิดห้องสปา',
-              currentStatusEn: 'Spa Closed',
-              bookings: []
+              id: '3', nameTh: 'จอย', nameEn: 'Joy', photoUrl: '', workingToday: false,
+              currentStatus: 'ปิดห้องสปา', currentStatusEn: 'Spa Closed', bookings: []
             }
           ]
         };
@@ -1109,49 +1020,48 @@
 
       async function fetchState() {
         if (!config.apiUrl) {
-          if (new URLSearchParams(window.location.search).get('preview') === '1') {
+          if (config.preview === true || new URLSearchParams(window.location.search).get('preview') === '1') {
             lastSuccessAt = Date.now();
             renderState(buildPreviewState());
-            updateConnectionState();
+            monitorConnection();
           } else {
-            renderSetupRequired();
+            renderSetup();
           }
           return;
         }
+
         if (requestRunning) return;
         requestRunning = true;
-
         var controller = new AbortController();
         var timeout = window.setTimeout(function () { controller.abort(); }, 8000);
 
         try {
           var separator = config.apiUrl.indexOf('?') >= 0 ? '&' : '?';
           var response = await fetch(config.apiUrl + separator + '_=' + Date.now(), {
-            method: 'GET',
             cache: 'no-store',
             redirect: 'follow',
             signal: controller.signal
           });
           if (!response.ok) throw new Error('HTTP ' + response.status);
-
           var data = await response.json();
           if (!data || data.ok !== true || !Array.isArray(data.therapists)) {
             throw new Error('Invalid API response');
           }
-
           lastSuccessAt = Date.now();
           renderState(data);
-          updateConnectionState();
+          monitorConnection();
         } catch (error) {
-          if (!latestState) renderError('ไม่สามารถเชื่อมต่อข้อมูลคิวได้');
-          updateConnectionState();
+          if (!latestState) {
+            byId('card-grid').innerHTML = '<div class="empty-screen">กำลังตรวจสอบระบบ · Checking system</div>';
+          }
+          monitorConnection();
         } finally {
           window.clearTimeout(timeout);
           requestRunning = false;
         }
       }
 
-      function formatBangkokTime(value) {
+      function formatTime(value) {
         var date = new Date(value);
         if (Number.isNaN(date.getTime())) return '--:--';
         return new Intl.DateTimeFormat('th-TH', {
@@ -1164,30 +1074,17 @@
       }
 
       function initials(value) {
-        var words = safeText(value).trim().split(/\s+/).filter(Boolean);
+        var words = text(value).trim().split(/\s+/).filter(Boolean);
         if (!words.length) return '42';
         return words.slice(0, 2).map(function (word) {
           return word.charAt(0).toUpperCase();
         }).join('');
       }
 
-      function pad2(value) {
-        return String(value).padStart(2, '0');
-      }
-
-      function escapeHtml(value) {
-        return safeText(value)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#039;');
-      }
-
       setBrand();
       updateClock();
       window.setInterval(updateClock, 1000);
-      window.setInterval(updateConnectionState, 1000);
+      window.setInterval(monitorConnection, 1000);
       fetchState();
       window.setInterval(fetchState, Math.max(5000, Number(config.refreshMs) || 10000));
     })();
