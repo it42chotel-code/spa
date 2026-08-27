@@ -1139,7 +1139,7 @@
           });
 
           var slotStatus;
-          if (therapist.workingToday === false) {
+          if (hour >= 23 || therapist.workingToday === false) {
             slotStatus = 'closed';
           } else if (overlap) {
             slotStatus = overlap.status === 'คิวสุดท้ายของวัน' ? 'last' : 'busy';
@@ -1257,7 +1257,7 @@
       function buildPreviewState() {
         return {
           ok: true,
-          version: '2.1.0-preview',
+          version: '2.1.1-preview',
           generatedAt: new Date().toISOString(),
           timezone: 'Asia/Bangkok',
           spaStatus: 'เปิดห้องสปา',
@@ -1275,7 +1275,7 @@
               currentStatus: 'ว่าง', currentStatusEn: 'Available',
               bookings: [
                 { start: '16:10', end: '17:40', startMinutes: 970, endMinutes: 1060, status: 'ไม่ว่าง' },
-                { start: '22:00', end: '00:00', startMinutes: 1320, endMinutes: 1440, status: 'คิวสุดท้ายของวัน' }
+                { start: '22:00', end: '23:00', startMinutes: 1320, endMinutes: 1380, status: 'คิวสุดท้ายของวัน' }
               ]
             },
             {
