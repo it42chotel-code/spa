@@ -598,6 +598,57 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
     }
+  
+    /* Hybrid: retain the new light therapist-card appearance */
+    .card {
+      border-color: rgba(107,74,50,.16);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.54), transparent 24%),
+        var(--card);
+    }
+
+    .card-top {
+      min-height: 112px;
+      border-bottom: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 10% 8%, rgba(198,162,77,.10), transparent 36%),
+        linear-gradient(135deg, #FFFDF8, #FBF7ED);
+    }
+
+    .card-top::after {
+      content: none;
+      display: none;
+      animation: none;
+    }
+
+    .avatar {
+      border: 1px solid rgba(107,74,50,.24);
+      color: var(--espresso);
+      background:
+        linear-gradient(145deg, rgba(231,206,140,.22), rgba(255,255,255,.78)),
+        var(--bg-2);
+      box-shadow:
+        inset 0 0 0 4px rgba(255,255,255,.54),
+        0 10px 24px -18px rgba(36,24,17,.62);
+    }
+
+    .name-th {
+      color: var(--ink);
+    }
+
+    .name-en {
+      color: var(--muted);
+    }
+
+    .pill {
+      border: 1px solid rgba(107,74,50,.08);
+      box-shadow: 0 7px 18px -15px rgba(36,24,17,.62);
+    }
+
+    @media (max-height: 760px) {
+      .card-top { min-height: 88px; }
+    }
+
   </style>
 </head>
 <body>
