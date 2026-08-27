@@ -649,6 +649,148 @@
       .card-top { min-height: 88px; }
     }
 
+  
+    /* Hourly availability grid inside each therapist card */
+    .current-panel {
+      min-height: 136px;
+      padding-top: 11px;
+      padding-bottom: 11px;
+    }
+
+    .primary-time {
+      margin-top: 7px;
+      font-size: clamp(23px, 2.25vw, 38px);
+    }
+
+    .hourly-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+      margin: 11px 0 7px;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .hourly-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .hour-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(5, minmax(0, 1fr));
+      gap: 7px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .hour-slot {
+      display: grid;
+      grid-template-columns: 53px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-left-width: 4px;
+      border-radius: 11px;
+      background: #FFF;
+    }
+
+    .hour-slot.available {
+      border-color: rgba(47,107,69,.20);
+      border-left-color: var(--available);
+      background: linear-gradient(100deg, rgba(228,239,227,.88), rgba(255,255,255,.92));
+    }
+
+    .hour-slot.busy {
+      border-color: rgba(166,70,47,.24);
+      border-left-color: var(--busy);
+      background: linear-gradient(100deg, rgba(244,228,222,.92), rgba(255,255,255,.94));
+    }
+
+    .hour-slot.last {
+      border-color: rgba(198,162,77,.38);
+      border-left-color: var(--gold);
+      background: linear-gradient(100deg, rgba(255,243,211,.96), rgba(255,255,255,.94));
+    }
+
+    .hour-slot.closed {
+      border-color: rgba(98,93,88,.15);
+      border-left-color: #9B948C;
+      background: linear-gradient(100deg, rgba(234,228,216,.82), rgba(255,255,255,.92));
+    }
+
+    .hour-time {
+      color: var(--espresso);
+      font-family: var(--clock);
+      font-size: clamp(13px, 1.08vw, 18px);
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .hour-copy {
+      min-width: 0;
+      line-height: 1.08;
+    }
+
+    .hour-status {
+      overflow: hidden;
+      font-size: clamp(10px, .86vw, 13px);
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hour-slot.available .hour-status { color: var(--available); }
+    .hour-slot.busy .hour-status { color: var(--busy); }
+    .hour-slot.last .hour-status { color: var(--last); }
+    .hour-slot.closed .hour-status { color: var(--closed); }
+
+    .hour-en {
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--muted);
+      font-family: var(--english);
+      font-size: 8px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hour-range {
+      margin-top: 3px;
+      color: var(--espresso);
+      font-family: var(--english);
+      font-size: clamp(8px, .68vw, 10px);
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    @media (max-height: 760px) {
+      .current-panel { min-height: 104px; }
+      .hourly-title { margin-top: 7px; margin-bottom: 5px; }
+      .hour-grid { gap: 5px; }
+      .hour-slot { min-height: 38px; padding: 4px 7px; grid-template-columns: 46px minmax(0,1fr); }
+      .hour-en { display: none; }
+      .hour-range { margin-top: 1px; }
+    }
+
+    @media (max-width: 1120px) and (min-width: 901px) {
+      .hour-slot { grid-template-columns: 1fr; gap: 2px; }
+      .hour-time { font-size: 13px; }
+    }
+
   </style>
 </head>
 <body>
@@ -911,32 +1053,11 @@
         body.className = 'card-body';
         body.appendChild(renderCurrentPanel(status, statusClass, active, upcoming));
 
-        var upcomingTitle = document.createElement('div');
-        upcomingTitle.className = 'upcoming-title';
-        upcomingTitle.textContent = 'คิวถัดไป · Upcoming queue';
-        body.appendChild(upcomingTitle);
-
-        var list = document.createElement('div');
-        list.className = 'queue-list';
-
-        if (statusClass === 'closed') {
-          list.appendChild(renderEmptyQueue('วันนี้ไม่รับคิว · Not accepting bookings today'));
-          list.appendChild(renderEmptyQueue('ปิดห้องสปา · Spa closed'));
-          list.appendChild(renderEmptyQueue('เปิดอีกครั้งตามวันทำงาน · Opens on next working day'));
-        } else {
-          upcoming.forEach(function (booking) {
-            list.appendChild(renderQueueItem(booking));
-          });
-          while (list.children.length < 3) {
-            list.appendChild(renderEmptyQueue(
-              list.children.length === 0 ?
-                'ยังไม่มีคิวจองเพิ่มเติม · No more bookings' :
-                'ช่วงเวลาว่าง · Available period'
-            ));
-          }
-        }
-
-        body.appendChild(list);
+        var hourlyTitle = document.createElement('div');
+        hourlyTitle.className = 'hourly-title';
+        hourlyTitle.textContent = 'ตารางคิวรายชั่วโมง · Hourly availability';
+        body.appendChild(hourlyTitle);
+        body.appendChild(renderHourlyGrid(therapist, bookings));
         card.appendChild(top);
         card.appendChild(body);
         return card;
@@ -994,6 +1115,91 @@
         panel.appendChild(icon);
         panel.appendChild(copy);
         return panel;
+      }
+
+      function renderHourlyGrid(therapist, bookings) {
+        var grid = document.createElement('div');
+        grid.className = 'hour-grid';
+
+        var ordered = bookings.slice().sort(function (a, b) {
+          return Number(a.startMinutes) - Number(b.startMinutes);
+        });
+        var finalBookings = ordered.filter(function (booking) {
+          return booking.status === 'คิวสุดท้ายของวัน';
+        });
+        var lastBooking = finalBookings.length ? finalBookings[finalBookings.length - 1] : null;
+        var closeAfter = lastBooking ? Number(lastBooking.endMinutes) : null;
+
+        for (var hour = 14; hour <= 23; hour++) {
+          var slotStart = hour * 60;
+          var slotEnd = slotStart + 60;
+          var overlap = ordered.find(function (booking) {
+            return Number(booking.startMinutes) < slotEnd &&
+              Number(booking.endMinutes) > slotStart;
+          });
+
+          var slotStatus;
+          if (therapist.workingToday === false) {
+            slotStatus = 'closed';
+          } else if (overlap) {
+            slotStatus = overlap.status === 'คิวสุดท้ายของวัน' ? 'last' : 'busy';
+          } else if (closeAfter !== null && slotStart >= closeAfter) {
+            slotStatus = 'closed';
+          } else {
+            slotStatus = 'available';
+          }
+
+          grid.appendChild(renderHourSlot(hour, slotStatus, overlap));
+        }
+        return grid;
+      }
+
+      function renderHourSlot(hour, slotStatus, booking) {
+        var item = document.createElement('div');
+        item.className = 'hour-slot ' + slotStatus;
+
+        var timeLabel = document.createElement('div');
+        timeLabel.className = 'hour-time';
+        timeLabel.textContent = String(hour).padStart(2, '0') + ':00';
+
+        var copy = document.createElement('div');
+        copy.className = 'hour-copy';
+
+        var status = document.createElement('div');
+        status.className = 'hour-status';
+        var english = document.createElement('div');
+        english.className = 'hour-en';
+
+        if (slotStatus === 'available') {
+          status.textContent = 'ว่าง';
+          english.textContent = 'AVAILABLE';
+        } else if (slotStatus === 'busy') {
+          status.textContent = 'ไม่ว่าง';
+          english.textContent = 'OCCUPIED';
+        } else if (slotStatus === 'last') {
+          status.textContent = 'คิวสุดท้าย';
+          english.textContent = 'LAST BOOKING';
+        } else {
+          status.textContent = 'ปิด';
+          english.textContent = 'CLOSED';
+        }
+
+        copy.appendChild(status);
+        copy.appendChild(english);
+
+        if (booking) {
+          var range = document.createElement('div');
+          range.className = 'hour-range';
+          range.textContent = text(booking.start) + '–' + text(booking.end);
+          copy.appendChild(range);
+        }
+
+        item.appendChild(timeLabel);
+        item.appendChild(copy);
+        item.setAttribute('aria-label',
+          timeLabel.textContent + ' ' + status.textContent +
+          (booking ? ' ' + text(booking.start) + ' ถึง ' + text(booking.end) : ''));
+        return item;
       }
 
       function renderQueueItem(booking) {
