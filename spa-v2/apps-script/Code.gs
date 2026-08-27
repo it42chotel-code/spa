@@ -6,7 +6,7 @@
  * Public API returns only therapist names, photos, working state, status and times.
  */
 const SPAQ = Object.freeze({
-  VERSION: '2.0.1',
+  VERSION: '2.0.2',
   TIMEZONE: 'Asia/Bangkok',
   QUEUE_SPREADSHEET_ID: '1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8',
   REGISTRY_SPREADSHEET_ID: '1UM-6JfkCp3DJPwaT3Zg1kRX85Psm1epY',
@@ -594,7 +594,6 @@ function buildPublicState_() {
   const dayKey = getBusinessDateKey_();
 
   const publicTherapists = therapists
-    .filter(function(item) { return item.workingToday; })
     .map(function(therapist) {
       const items = [];
       let hasLastQueue = false;
@@ -641,13 +640,15 @@ function buildPublicState_() {
         });
       }
 
-      let currentStatus = SPAQ.STATUS.AVAILABLE;
+      let currentStatus = therapist.workingToday ? SPAQ.STATUS.AVAILABLE : SPAQ.STATUS.CLOSED;
       const adjustedNow = nowMinutes < SPAQ.START_HOUR * 60 ? nowMinutes + 24 * 60 : nowMinutes;
       const activeBooking = items.find(function(item) {
         return adjustedNow >= item.startMinutes && adjustedNow < item.endMinutes;
       });
 
-      if ((explicitClosedAt !== null && adjustedNow >= explicitClosedAt) ||
+      if (!therapist.workingToday) {
+        currentStatus = SPAQ.STATUS.CLOSED;
+      } else if ((explicitClosedAt !== null && adjustedNow >= explicitClosedAt) ||
           (hasLastQueue && lastQueueEnd !== null && adjustedNow >= lastQueueEnd)) {
         currentStatus = SPAQ.STATUS.CLOSED;
       } else if (activeBooking) {
