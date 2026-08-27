@@ -1052,9 +1052,70 @@
         });
       }
 
+
+      function buildPreviewState() {
+        return {
+          ok: true,
+          version: '2.0.2-preview',
+          generatedAt: new Date().toISOString(),
+          timezone: 'Asia/Bangkok',
+          businessDate: '2026-08-27',
+          spaStatus: 'เปิดห้องสปา',
+          schedule: {
+            start: '14:00',
+            end: '24:00',
+            slots: ['14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00']
+          },
+          therapists: [
+            {
+              id: '1',
+              nameTh: 'ภา',
+              nameEn: 'Pa',
+              photoUrl: '',
+              workingToday: true,
+              currentStatus: 'ไม่ว่าง',
+              currentStatusEn: 'Occupied',
+              bookings: [
+                { start: '14:13', end: '15:43', startMinutes: 853, endMinutes: 943, status: 'ไม่ว่าง', statusEn: 'Occupied' },
+                { start: '18:20', end: '19:50', startMinutes: 1100, endMinutes: 1190, status: 'คิวสุดท้ายของวัน', statusEn: 'Last Booking' }
+              ]
+            },
+            {
+              id: '2',
+              nameTh: 'เมล',
+              nameEn: 'Mel',
+              photoUrl: '',
+              workingToday: true,
+              currentStatus: 'ว่าง',
+              currentStatusEn: 'Available',
+              bookings: [
+                { start: '16:10', end: '17:40', startMinutes: 970, endMinutes: 1060, status: 'ไม่ว่าง', statusEn: 'Occupied' },
+                { start: '22:00', end: '00:00', startMinutes: 1320, endMinutes: 1440, status: 'คิวสุดท้ายของวัน', statusEn: 'Last Booking' }
+              ]
+            },
+            {
+              id: '3',
+              nameTh: 'จอย',
+              nameEn: 'Joy',
+              photoUrl: '',
+              workingToday: false,
+              currentStatus: 'ปิดห้องสปา',
+              currentStatusEn: 'Spa Closed',
+              bookings: []
+            }
+          ]
+        };
+      }
+
       async function fetchState() {
         if (!config.apiUrl) {
-          renderSetupRequired();
+          if (new URLSearchParams(window.location.search).get('preview') === '1') {
+            lastSuccessAt = Date.now();
+            renderState(buildPreviewState());
+            updateConnectionState();
+          } else {
+            renderSetupRequired();
+          }
           return;
         }
         if (requestRunning) return;
