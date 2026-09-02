@@ -71,8 +71,6 @@ function onOpen() {
   }
 }
 
-function doGet()
-
 function doGet() {
   try {
     const cache = CacheService.getScriptCache();
@@ -255,8 +253,6 @@ function syncQueueLayout() {
   spaNotify_(result.message);
   return result;
 }
-
-function runExport_(
 
 function runExport_(runLabel) {
   const lock = LockService.getScriptLock();
