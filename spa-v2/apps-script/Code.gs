@@ -6,7 +6,7 @@
  * Public API returns only therapist names, photos, working state, status and times.
  */
 const SPAQ = Object.freeze({
-  VERSION: '2.0.3',
+  VERSION: '2.0.4',
   TIMEZONE: 'Asia/Bangkok',
   QUEUE_SPREADSHEET_ID: '1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8',
   REGISTRY_SPREADSHEET_ID: '1UM-6JfkCp3DJPwaT3Zg1kRX85Psm1epY',
@@ -56,16 +56,22 @@ const SPAQ_QUEUE_HEADERS = Object.freeze({
 });
 
 function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu('42C Spa System')
-    .addItem('ติดตั้ง/ซ่อมแซมระบบ', 'installSpaQueueSystem')
-    .addSeparator()
-    .addItem('ส่งออกข้อมูลตอนนี้', 'manualExportNow')
-    .addItem('ตรวจสอบและรีเซ็ตตอนนี้', 'manualVerifyAndResetNow')
-    .addItem('ตรวจสอบระบบ', 'validateSpaQueueSystem')
-    .addItem('จัดแถวหมอนวดให้ครบ', 'syncQueueLayout')
-    .addToUi();
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu('42C Spa System')
+      .addItem('ติดตั้ง/ซ่อมแซมระบบ', 'installSpaQueueSystem')
+      .addSeparator()
+      .addItem('ส่งออกข้อมูลตอนนี้', 'manualExportNow')
+      .addItem('ตรวจสอบและรีเซ็ตตอนนี้', 'manualVerifyAndResetNow')
+      .addItem('ตรวจสอบระบบ', 'validateSpaQueueSystem')
+      .addItem('จัดแถวหมอนวดให้ครบ', 'syncQueueLayout')
+      .addToUi();
+  } catch (error) {
+    console.log('Sheet menu is available only for a spreadsheet-bound script.');
+  }
 }
+
+function doGet()
 
 function doGet() {
   try {
@@ -96,6 +102,16 @@ function spaJson_(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function spaNotify_(message) {
+  const text = String(message);
+  try {
+    SpreadsheetApp.getUi().alert(text);
+  } catch (error) {
+    console.log(text);
+  }
+  return text;
+}
+
 function installSpaQueueSystem() {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
@@ -117,10 +133,16 @@ function installSpaQueueSystem() {
     }
 
     logEvent_('INSTALL', 'OK', 'Installed Spa Queue V2 ' + SPAQ.VERSION);
-    SpreadsheetApp.getUi().alert(
-      'ติดตั้งระบบ 42C Spa Queue V2 สำเร็จ\n\n' +
+    const result = {
+      ok: true,
+      version: SPAQ.VERSION,
+      message: 'ติดตั้งระบบ 42C Spa Queue V2 สำเร็จ'
+    };
+    spaNotify_(
+      result.message + '\n\n' +
       'กรุณาตรวจชื่อเต็มของหมอนวดในแท็บ SPA_CONFIG และ Deploy เป็น Web app'
     );
+    return result;
   } finally {
     lock.releaseLock();
   }
@@ -202,31 +224,39 @@ function runResetWithRetryWindow_(dateKey) {
 
 function manualExportNow() {
   const result = runExport_('MANUAL');
-  SpreadsheetApp.getUi().alert(JSON.stringify(result, null, 2));
+  spaNotify_(JSON.stringify(result, null, 2));
+  return result;
 }
 
 function manualVerifyAndResetNow() {
   const result = verifyAndReset_('MANUAL');
-  SpreadsheetApp.getUi().alert(JSON.stringify(result, null, 2));
+  spaNotify_(JSON.stringify(result, null, 2));
+  return result;
 }
 
 function validateSpaQueueSystem() {
   const queueSS = SpreadsheetApp.openById(SPAQ.QUEUE_SPREADSHEET_ID);
   validateRequiredSheets_(queueSS);
-  const result = inspectSource_();
-  SpreadsheetApp.getUi().alert(JSON.stringify({
-    ok: result.invalid.length === 0,
-    businessDate: result.businessDateKey,
-    bookingCount: result.bookings.length,
-    invalid: result.invalid
-  }, null, 2));
+  const inspection = inspectSource_();
+  const result = {
+    ok: inspection.invalid.length === 0,
+    businessDate: inspection.businessDateKey,
+    bookingCount: inspection.bookings.length,
+    invalid: inspection.invalid
+  };
+  spaNotify_(JSON.stringify(result, null, 2));
+  return result;
 }
 
 function syncQueueLayout() {
   const queueSS = SpreadsheetApp.openById(SPAQ.QUEUE_SPREADSHEET_ID);
   ensureQueueRows_(queueSS);
-  SpreadsheetApp.getUi().alert('จัดแถวหมอนวดและช่วงเวลาเรียบร้อยแล้ว');
+  const result = { ok: true, message: 'จัดแถวหมอนวดและช่วงเวลาเรียบร้อยแล้ว' };
+  spaNotify_(result.message);
+  return result;
 }
+
+function runExport_(
 
 function runExport_(runLabel) {
   const lock = LockService.getScriptLock();
