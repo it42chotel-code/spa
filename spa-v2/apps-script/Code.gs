@@ -6,12 +6,14 @@
  * Public API returns only therapist names, photos, working state, status and times.
  */
 const SPAQ = Object.freeze({
-  VERSION: '2.0.4',
+  VERSION: '2.0.5',
   TIMEZONE: 'Asia/Bangkok',
   QUEUE_SPREADSHEET_ID: '1fQ2ieIc0qBhrgx6LwlPQ53HASxvS3QBMs04gcwTfMb8',
   REGISTRY_SPREADSHEET_ID: '1UM-6JfkCp3DJPwaT3Zg1kRX85Psm1epY',
-  QUEUE_SHEET: 'Queue',
-  THERAPIST_SHEET: 'ตารางเวลาหมอนวด',
+  // Existing workbook labels are historical: Queue contains therapist master data,
+  // while ตารางเวลาหมอนวด contains the actual hourly booking grid.
+  QUEUE_SHEET: 'ตารางเวลาหมอนวด',
+  THERAPIST_SHEET: 'Queue',
   CONFIG_SHEET: 'SPA_CONFIG',
   LOG_SHEET: 'SPA_SYSTEM_LOG',
   AUDIT_SHEET: 'SPA_EXPORT_AUDIT',
