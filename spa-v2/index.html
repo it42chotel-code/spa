@@ -196,8 +196,15 @@
 
     .sync.error {
       color: var(--busy);
-      border-color: rgba(166,70,47,.26);
-      background: #FFF0E9;
+      border-color: rgba(182,63,47,.40);
+      background: #FCE5E0;
+    }
+
+    .sync.closed {
+      color: #FFF6E7;
+      border-color: rgba(231,206,140,.52);
+      background: var(--closed);
+      box-shadow: 0 8px 20px -16px rgba(36,24,17,.70);
     }
 
     .sync-dot {
@@ -208,6 +215,56 @@
       box-shadow: 0 0 0 4px currentColor;
       opacity: .74;
     }
+
+    .status-legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(7px, 1vw, 14px);
+      flex: 0 0 auto;
+      margin: -2px 0 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 4px 10px;
+      border: 1px solid;
+      border-radius: 999px;
+      font-family: var(--english);
+      font-size: clamp(8px, .68vw, 10px);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .legend-item.available { color: var(--available); border-color: rgba(23,107,67,.38); background: var(--available-bg); }
+    .legend-item.busy { color: var(--busy); border-color: rgba(182,63,47,.40); background: var(--busy-bg); }
+    .legend-item.last { color: var(--last); border-color: rgba(147,99,0,.40); background: var(--last-bg); }
+    .legend-item.closed { color: var(--closed); border-color: rgba(79,76,73,.32); background: var(--closed-bg); }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .legend-count {
+      display: grid;
+      min-width: 19px;
+      height: 19px;
+      padding: 0 5px;
+      place-items: center;
+      border-radius: 999px;
+      color: #FFF;
+      background: currentColor;
+      font-size: 9px;
+    }
+
+    .legend-count span { color: #FFF; }
 
     .grid {
       display: grid;
@@ -224,10 +281,16 @@
       flex-direction: column;
       overflow: hidden;
       border: 1px solid var(--line);
+      border-top-width: 6px;
       border-radius: 20px;
       background: var(--card);
       box-shadow: var(--shadow-lift);
     }
+
+    .card.state-available, .card.state-open { border-top-color: var(--available); }
+    .card.state-busy { border-top-color: var(--busy); }
+    .card.state-last { border-top-color: var(--last); }
+    .card.state-closed { border-top-color: var(--closed); }
 
     .card-top {
       position: relative;
@@ -564,6 +627,106 @@
       text-align: right;
     }
 
+    .spa-closed-screen {
+      position: relative;
+      display: grid;
+      grid-column: 1 / -1;
+      min-height: 0;
+      place-items: center;
+      overflow: hidden;
+      border: 2px solid rgba(231,206,140,.62);
+      border-radius: 28px;
+      color: #FFF9ED;
+      background:
+        radial-gradient(700px 340px at 50% 30%, rgba(198,162,77,.23), transparent 68%),
+        linear-gradient(145deg, #2E2119, #503522 58%, #2A201B);
+      box-shadow: 0 32px 70px -32px rgba(36,24,17,.82);
+      text-align: center;
+    }
+
+    .spa-closed-screen::before,
+    .spa-closed-screen::after {
+      content: "";
+      position: absolute;
+      width: 34vw;
+      height: 34vw;
+      border: 1px solid rgba(231,206,140,.14);
+      border-radius: 50%;
+    }
+
+    .spa-closed-screen::before { top: -24vw; left: -12vw; }
+    .spa-closed-screen::after { right: -12vw; bottom: -25vw; }
+
+    .spa-closed-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: min(900px, 86%);
+      place-items: center;
+    }
+
+    .spa-closed-mark {
+      display: grid;
+      width: clamp(72px, 7vw, 118px);
+      height: clamp(72px, 7vw, 118px);
+      place-items: center;
+      border: 2px solid rgba(231,206,140,.68);
+      border-radius: 50%;
+      color: var(--gold-light);
+      background: rgba(0,0,0,.18);
+      font-family: var(--english);
+      font-size: clamp(34px, 4vw, 62px);
+      font-weight: 700;
+    }
+
+    .spa-closed-eyebrow {
+      margin-top: clamp(16px, 2vh, 26px);
+      color: var(--gold-light);
+      font-family: var(--english);
+      font-size: clamp(10px, 1vw, 15px);
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .spa-closed-title {
+      margin-top: 4px;
+      color: #FFF;
+      font-size: clamp(54px, 7.5vw, 126px);
+      font-weight: 700;
+      line-height: 1;
+      text-shadow: 0 10px 32px rgba(0,0,0,.30);
+    }
+
+    .spa-closed-en {
+      margin-top: 8px;
+      color: var(--gold-light);
+      font-family: var(--clock);
+      font-size: clamp(26px, 3.3vw, 54px);
+      font-weight: 600;
+      letter-spacing: .16em;
+    }
+
+    .spa-closed-hours {
+      margin-top: clamp(20px, 3vh, 34px);
+      padding: 10px 22px;
+      border: 1px solid rgba(231,206,140,.34);
+      border-radius: 999px;
+      color: #FFF6E7;
+      background: rgba(255,255,255,.08);
+      font-family: var(--english);
+      font-size: clamp(11px, 1vw, 15px);
+      font-weight: 700;
+      letter-spacing: .07em;
+    }
+
+    .spa-closed-note {
+      margin-top: 12px;
+      color: rgba(255,249,237,.74);
+      font-size: clamp(11px, .9vw, 14px);
+      font-weight: 600;
+    }
+
     .empty-screen {
       display: grid;
       grid-column: 1 / -1;
@@ -578,6 +741,8 @@
 
     @media (max-height: 760px) {
       .display { padding-top: 12px; padding-bottom: 12px; }
+      .status-legend { margin-bottom: 7px; }
+      .legend-item { min-height: 24px; padding: 2px 8px; }
       .header { padding-bottom: 10px; }
       .logo { width: 70px; height: 56px; font-size: 27px; }
       .sync { margin: 6px auto 8px; min-height: 27px; }
@@ -832,6 +997,13 @@
       <span id="sync-text">กำลังอัปเดตข้อมูลคิว · Updating queue information</span>
     </div>
 
+    <div class="status-legend" id="status-legend" aria-label="คำอธิบายสถานะคิว">
+      <div class="legend-item available"><span class="legend-dot"></span>ว่าง · AVAILABLE <span class="legend-count"><span id="count-available">0</span></span></div>
+      <div class="legend-item busy"><span class="legend-dot"></span>ไม่ว่าง · OCCUPIED <span class="legend-count"><span id="count-busy">0</span></span></div>
+      <div class="legend-item last"><span class="legend-dot"></span>คิวสุดท้าย · LAST <span class="legend-count"><span id="count-last">0</span></span></div>
+      <div class="legend-item closed"><span class="legend-dot"></span>ปิด · CLOSED <span class="legend-count"><span id="count-closed">0</span></span></div>
+    </div>
+
     <section class="grid" id="card-grid" aria-label="Spa therapist queue">
       <div class="empty-screen">กำลังโหลดข้อมูลคิว · Loading queue</div>
     </section>
@@ -949,6 +1121,8 @@
           setSync('error', 'การเชื่อมต่อขัดข้อง · Showing last known status');
         } else if (age >= config.staleAfterMs) {
           setSync('warn', 'กำลังตรวจสอบข้อมูลล่าสุด · Checking latest queue');
+        } else if (latestState && latestState.spaStatus === 'ปิดห้องสปา') {
+          setSync('closed', 'ปิดห้องสปา · SPA CLOSED');
         } else {
           setSync('', config.preview ? 'ข้อมูลตัวอย่าง · Preview data' : 'ข้อมูลคิวเป็นปัจจุบัน · Queue data is current');
         }
@@ -958,8 +1132,26 @@
         latestState = state;
         var therapists = Array.isArray(state.therapists) ? state.therapists : [];
         var grid = byId('card-grid');
-        grid.style.setProperty('--card-count', String(Math.max(therapists.length, 1)));
+        var spaClosed = state.spaStatus === 'ปิดห้องสปา' ||
+          (therapists.length > 0 && therapists.every(function (therapist) {
+            return therapist.workingToday === false || therapist.currentStatus === 'ปิดห้องสปา';
+          }));
+
+        updateStatusLegend(therapists);
+        document.body.classList.toggle('spa-is-closed', spaClosed);
+        byId('status-legend').hidden = spaClosed;
+        grid.style.setProperty('--card-count', String(spaClosed ? 1 : Math.max(therapists.length, 1)));
         grid.replaceChildren();
+
+        byId('updated').textContent =
+          (config.preview ? 'PREVIEW · ' : '') +
+          'อัปเดตล่าสุด ' + formatTime(state.generatedAt) +
+          ' · NO PERSONAL DATA';
+
+        if (spaClosed) {
+          grid.appendChild(renderSpaClosedScreen());
+          return;
+        }
 
         if (!therapists.length) {
           var empty = document.createElement('div');
@@ -972,11 +1164,62 @@
         therapists.forEach(function (therapist) {
           grid.appendChild(renderCard(therapist));
         });
+      }
 
-        byId('updated').textContent =
-          (config.preview ? 'PREVIEW · ' : '') +
-          'อัปเดตล่าสุด ' + formatTime(state.generatedAt) +
-          ' · NO PERSONAL DATA';
+      function updateStatusLegend(therapists) {
+        var counts = { available: 0, busy: 0, last: 0, closed: 0 };
+        therapists.forEach(function (therapist) {
+          var status = therapist.workingToday === false ? 'ปิดห้องสปา' : therapist.currentStatus;
+          var statusClass = statusClassMap[status] || 'closed';
+          if (statusClass === 'open') statusClass = 'available';
+          counts[statusClass] = (counts[statusClass] || 0) + 1;
+        });
+        Object.keys(counts).forEach(function (key) {
+          var node = byId('count-' + key);
+          if (node) node.textContent = String(counts[key]);
+        });
+      }
+
+      function renderSpaClosedScreen() {
+        var panel = document.createElement('section');
+        panel.className = 'spa-closed-screen';
+        panel.setAttribute('aria-label', 'ปิดห้องสปา SPA CLOSED');
+
+        var content = document.createElement('div');
+        content.className = 'spa-closed-content';
+
+        var mark = document.createElement('div');
+        mark.className = 'spa-closed-mark';
+        mark.textContent = '—';
+
+        var eyebrow = document.createElement('div');
+        eyebrow.className = 'spa-closed-eyebrow';
+        eyebrow.textContent = '42C SPA & WELLNESS';
+
+        var title = document.createElement('div');
+        title.className = 'spa-closed-title';
+        title.textContent = 'ปิดห้องสปา';
+
+        var english = document.createElement('div');
+        english.className = 'spa-closed-en';
+        english.textContent = 'SPA CLOSED';
+
+        var hours = document.createElement('div');
+        hours.className = 'spa-closed-hours';
+        hours.textContent = 'เปิดให้บริการทุกวัน 14:00–23:00 · OPEN DAILY 14:00–23:00';
+
+        var note = document.createElement('div');
+        note.className = 'spa-closed-note';
+        note.textContent = 'กรุณาติดต่อ Front Reception สำหรับการจองล่วงหน้า';
+
+        content.appendChild(mark);
+        content.appendChild(eyebrow);
+        content.appendChild(title);
+        content.appendChild(english);
+        content.appendChild(hours);
+        content.appendChild(note);
+        panel.appendChild(content);
+        return panel;
       }
 
       function renderCard(therapist) {
@@ -1256,7 +1499,7 @@
       function buildPreviewState() {
         return {
           ok: true,
-          version: '2.1.1-preview',
+          version: '2.2.0-preview',
           generatedAt: new Date().toISOString(),
           timezone: 'Asia/Bangkok',
           spaStatus: 'เปิดห้องสปา',
