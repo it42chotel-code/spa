@@ -20,14 +20,14 @@
       --ink: #241811;
       --muted: #82735F;
       --line: rgba(36,24,17,.12);
-      --available: #2F6B45;
-      --available-bg: #E4EFE3;
-      --busy: #A6462F;
-      --busy-bg: #F4E4DE;
-      --last: #8A6424;
-      --last-bg: #FFF3D3;
-      --closed: #625D58;
-      --closed-bg: #EAE4D8;
+      --available: #176B43;
+      --available-bg: #D9F0E2;
+      --busy: #B63F2F;
+      --busy-bg: #F8DDD7;
+      --last: #936300;
+      --last-bg: #FFF0BF;
+      --closed: #4F4C49;
+      --closed-bg: #DEDAD2;
       --card: #FFFDF8;
       --shadow: 0 1px 2px rgba(36,24,17,.06), 0 18px 40px -18px rgba(36,24,17,.30);
       --shadow-lift: 0 2px 4px rgba(36,24,17,.08), 0 28px 56px -24px rgba(36,24,17,.38);
@@ -82,20 +82,22 @@
     .logo {
       display: grid;
       flex: 0 0 auto;
-      width: 84px;
-      height: 68px;
+      width: 136px;
+      height: 76px;
+      padding: 4px 8px;
       place-items: center;
-      border: 1px solid rgba(107,74,50,.16);
-      border-radius: 17px 7px 17px 7px;
-      color: var(--espresso);
-      background: rgba(255,253,248,.76);
+      overflow: hidden;
+      border: 1px solid rgba(107,74,50,.18);
+      border-radius: 15px 6px 15px 6px;
+      background: #FFF;
       box-shadow: var(--shadow);
-      font-family: Georgia, serif;
-      font-size: 31px;
-      letter-spacing: -3px;
     }
 
-    .logo em { color: #B85B40; font-style: normal; }
+    .logo svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
 
     .hotel {
       color: var(--espresso);
@@ -326,10 +328,10 @@
 
     .pill-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
 
-    .pill.available, .pill.open { color: var(--available); background: var(--available-bg); }
-    .pill.busy { color: var(--busy); background: var(--busy-bg); }
-    .pill.last { color: var(--last); background: var(--last-bg); }
-    .pill.closed { color: var(--closed); background: var(--closed-bg); }
+    .pill.available, .pill.open { color: var(--available); border-color: rgba(23,107,67,.42); background: var(--available-bg); }
+    .pill.busy { color: var(--busy); border-color: rgba(182,63,47,.42); background: var(--busy-bg); }
+    .pill.last { color: var(--last); border-color: rgba(147,99,0,.42); background: var(--last-bg); }
+    .pill.closed { color: var(--closed); border-color: rgba(79,76,73,.34); background: var(--closed-bg); }
 
     .card-body {
       display: flex;
@@ -353,10 +355,11 @@
       background: #FFF;
     }
 
-    .current-panel.available { border-color: rgba(47,107,69,.19); background: linear-gradient(145deg, rgba(228,239,227,.74), #FFF); }
-    .current-panel.busy { border-color: rgba(166,70,47,.20); background: linear-gradient(145deg, rgba(244,228,222,.82), #FFF); }
-    .current-panel.last { border-color: rgba(198,162,77,.32); background: linear-gradient(145deg, rgba(255,243,211,.92), #FFF); }
-    .current-panel.closed { border-color: rgba(98,93,88,.16); background: linear-gradient(145deg, rgba(234,228,216,.78), #FFF); }
+    .current-panel { border-left-width: 6px; }
+    .current-panel.available { border-color: rgba(23,107,67,.42); border-left-color: var(--available); background: linear-gradient(145deg, #D9F0E2, #F8FCF9 72%); }
+    .current-panel.busy { border-color: rgba(182,63,47,.42); border-left-color: var(--busy); background: linear-gradient(145deg, #F8DDD7, #FFF8F6 72%); }
+    .current-panel.last { border-color: rgba(147,99,0,.42); border-left-color: var(--last); background: linear-gradient(145deg, #FFF0BF, #FFF9E8 72%); }
+    .current-panel.closed { border-color: rgba(79,76,73,.34); border-left-color: var(--closed); background: linear-gradient(145deg, #DEDAD2, #F7F5F1 72%); }
 
     .status-icon {
       display: grid;
@@ -369,10 +372,10 @@
       font-weight: 800;
     }
 
-    .available .status-icon { color: var(--available); background: var(--available-bg); }
-    .busy .status-icon { color: var(--busy); background: var(--busy-bg); }
-    .last .status-icon { color: var(--last); background: var(--last-bg); }
-    .closed .status-icon { color: var(--closed); background: var(--closed-bg); }
+    .available .status-icon { color: #FFF; background: var(--available); box-shadow: 0 7px 18px -10px rgba(23,107,67,.75); }
+    .busy .status-icon { color: #FFF; background: var(--busy); box-shadow: 0 7px 18px -10px rgba(182,63,47,.75); }
+    .last .status-icon { color: #FFF; background: var(--last); box-shadow: 0 7px 18px -10px rgba(147,99,0,.75); }
+    .closed .status-icon { color: #FFF; background: var(--closed); box-shadow: 0 7px 18px -10px rgba(79,76,73,.70); }
 
     .current-copy { min-width: 0; }
 
@@ -706,27 +709,27 @@
     }
 
     .hour-slot.available {
-      border-color: rgba(47,107,69,.20);
+      border-color: rgba(23,107,67,.38);
       border-left-color: var(--available);
-      background: linear-gradient(100deg, rgba(228,239,227,.88), rgba(255,255,255,.92));
+      background: linear-gradient(100deg, #D9F0E2, #F9FCFA);
     }
 
     .hour-slot.busy {
-      border-color: rgba(166,70,47,.24);
+      border-color: rgba(182,63,47,.42);
       border-left-color: var(--busy);
-      background: linear-gradient(100deg, rgba(244,228,222,.92), rgba(255,255,255,.94));
+      background: linear-gradient(100deg, #F8DDD7, #FFF8F6);
     }
 
     .hour-slot.last {
-      border-color: rgba(198,162,77,.38);
-      border-left-color: var(--gold);
-      background: linear-gradient(100deg, rgba(255,243,211,.96), rgba(255,255,255,.94));
+      border-color: rgba(147,99,0,.44);
+      border-left-color: var(--last);
+      background: linear-gradient(100deg, #FFF0BF, #FFF9E8);
     }
 
     .hour-slot.closed {
-      border-color: rgba(98,93,88,.15);
-      border-left-color: #9B948C;
-      background: linear-gradient(100deg, rgba(234,228,216,.82), rgba(255,255,255,.92));
+      border-color: rgba(79,76,73,.30);
+      border-left-color: var(--closed);
+      background: linear-gradient(100deg, #DEDAD2, #F7F5F1);
     }
 
     .hour-time {
@@ -797,9 +800,17 @@
   <main class="display">
     <header class="header">
       <div class="brand">
-        <div class="logo">42<em>C</em></div>
+        <div class="logo" aria-label="42C The Chic Hotel">
+          <svg viewBox="0 0 250 150" role="img" aria-hidden="true">
+            <text x="9" y="93" fill="#050505" font-family="Arial, Helvetica, sans-serif" font-size="102" font-weight="800" letter-spacing="-7">42</text>
+            <text x="143" y="93" fill="#F01818" font-family="Arial, Helvetica, sans-serif" font-size="102" font-weight="800">C</text>
+            <text x="13" y="137" fill="#111" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">The</text>
+            <text x="62" y="137" fill="#F01818" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">C</text>
+            <text x="82" y="137" fill="#111" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">hic Hotel</text>
+          </svg>
+        </div>
         <div>
-          <div class="hotel" id="hotel-name">The Chic Hotel</div>
+          <div class="hotel">SPA QUEUE</div>
           <div class="brand-sub">SPA &amp; WELLNESS</div>
         </div>
       </div>
@@ -882,7 +893,6 @@
       }
 
       function setBrand() {
-        byId('hotel-name').textContent = config.hotelName;
         byId('title-th').textContent = config.displayTitleTh;
         byId('title-en').textContent = config.displayTitleEn;
       }
