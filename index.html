@@ -29,26 +29,26 @@ body{font-family:'Noto Sans Thai',sans-serif;color:var(--ink);background:radial-
 .name{font-size:clamp(21px,1.45vw,30px);font-weight:800;line-height:1.05}
 .name small{display:block;font-size:13px;color:#ecd9bd;margin-top:5px}
 .badge{padding:8px 14px;border-radius:999px;font-size:14px;font-weight:800;white-space:nowrap}
-.badge.free{background:#eaf7ec;color:#267247}.badge.busy{background:#ffe7e2;color:#a94436}
-.current{margin:14px 14px 8px;border:1px solid var(--line);border-left:5px solid var(--green);border-radius:17px;padding:12px 14px;background:linear-gradient(135deg,#fbfffc,#f1f8f3)}
+.badge.free{background:#eaf7ec;color:#267247} .badge.busy{background:#ffe7e2;color:#a94436}
+.current{margin:14px 14px 9px;border:1px solid var(--line);border-left:5px solid var(--green);border-radius:17px;padding:15px 16px;background:linear-gradient(135deg,#fbfffc,#f1f8f3)}
 .current.busyNow{border-left-color:var(--red);background:linear-gradient(135deg,#fffaf8,#fff0ed)}
-.eyebrow{font-size:11px;color:#a19487;font-weight:700}
-.state{font-size:clamp(21px,1.45vw,28px);font-weight:800;color:var(--green);margin-top:1px}
+.eyebrow{font-size:14px;color:#a19487;font-weight:700}
+.state{font-size:clamp(28px,1.95vw,38px);font-weight:800;color:var(--green);margin-top:2px;line-height:1.15}
 .current.busyNow .state{color:var(--red)}
-.currentMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}
-.pill{font-size:12px;border:1px solid #eadfce;background:#fff;border-radius:999px;padding:5px 9px;color:#6d5c4c}
-.body{min-height:0;padding:2px 14px 13px;display:grid;grid-template-rows:auto auto 1fr;gap:8px}
-.sectionLabel{text-align:center;font-size:11px;color:#aa9987;margin-top:1px}
-.schedule{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.slot{height:33px;border-radius:10px;border:1px solid;display:flex;align-items:center;justify-content:space-between;padding:0 9px;font-size:12px}
-.slot .time{font-weight:800}.slot .st{font-weight:700}
+.currentMeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:9px}
+.pill{font-size:15px;border:1px solid #eadfce;background:#fff;border-radius:999px;padding:7px 11px;color:#6d5c4c;font-weight:600}
+.body{min-height:0;padding:4px 14px 13px;display:grid;grid-template-rows:auto auto 1fr;gap:9px}
+.sectionLabel{text-align:center;font-size:15px;color:#958573;margin-top:2px;font-weight:700}
+.schedule{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.slot{height:42px;border-radius:11px;border:1px solid;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:16px}
+.slot .time{font-weight:800;font-size:17px} .slot .st{font-weight:800;font-size:16px}
 .slot.free{background:var(--greenbg);border-color:#d2e9d7;color:var(--green)}
 .slot.busy{background:var(--redbg);border-color:#f2d1ca;color:var(--red)}
-.bookings{min-height:0;overflow:hidden;display:grid;align-content:start;gap:6px}
-.booking{border:1px solid #e8d8b7;border-left:4px solid var(--gold);background:#fffaf0;border-radius:11px;padding:7px 9px}
-.booking strong{display:block;font-size:12px;color:#6a4c36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.booking small{display:block;font-size:10px;color:#9a8d7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.noBooking{text-align:center;color:#b1a497;font-size:11px;padding:6px 0}
+.bookings{min-height:0;overflow:hidden;display:grid;align-content:start;gap:8px}
+.booking{border:1px solid #e8d8b7;border-left:5px solid var(--gold);background:#fffaf0;border-radius:12px;padding:10px 12px}
+.booking strong{display:block;font-size:16px;color:#6a4c36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.booking small{display:block;font-size:13px;color:#9a8d7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.noBooking{text-align:center;color:#b1a497;font-size:14px;padding:8px 0}
 .footer{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
 .cta{grid-column:2;background:rgba(255,253,249,.96);border:1px solid rgba(129,88,59,.14);border-radius:19px;padding:10px 44px;min-width:620px;text-align:center;font-family:'Noto Serif Thai',serif;font-size:clamp(18px,1.55vw,29px);color:#4c3526;box-shadow:var(--shadow)}
 .status{justify-self:end;color:#aa9a88;font-size:10px;white-space:nowrap}
